@@ -1,0 +1,6 @@
+﻿global using _Net6CleanArchitectureQuizzApp.Domain.Common;
+global using _Net6CleanArchitectureQuizzApp.Domain.Entities;
+global using _Net6CleanArchitectureQuizzApp.Domain.Enums;
+global using _Net6CleanArchitectureQuizzApp.Domain.Interfaces;
+global using _Net6CleanArchitectureQuizzApp.Domain.Exceptions;
+global using _Net6CleanArchitectureQuizzApp.Domain.ValueObjects;

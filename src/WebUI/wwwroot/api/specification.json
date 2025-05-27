@@ -1,0 +1,1104 @@
+{
+  "x-generator": "NSwag v14.1.0.0 (NJsonSchema v11.0.2.0 (Newtonsoft.Json v13.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Graduation Project QuizzApp",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/Account/register": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "Account_Register",
+        "requestBody": {
+          "x-name": "model",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserModel"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Account/login": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "Account_Login",
+        "requestBody": {
+          "x-name": "model",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/CandidateAnswer": {
+      "post": {
+        "tags": [
+          "CandidateAnswer"
+        ],
+        "operationId": "CandidateAnswer_Create",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponseCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Questions/GetQuestionsByTestId": {
+      "get": {
+        "tags": [
+          "Questions"
+        ],
+        "operationId": "Questions_GetQuestionsByTestId",
+        "parameters": [
+          {
+            "name": "Id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetQuestionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Questions": {
+      "post": {
+        "tags": [
+          "Questions"
+        ],
+        "operationId": "Questions_Create",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuestionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Questions/{id}": {
+      "delete": {
+        "tags": [
+          "Questions"
+        ],
+        "operationId": "Questions_Delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Questions/GenerateQuestionsUsingOpenAI": {
+      "post": {
+        "tags": [
+          "Questions"
+        ],
+        "operationId": "Questions_CreateQuestions",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/QuizTest/by-id/{id}": {
+      "get": {
+        "tags": [
+          "QuizTest"
+        ],
+        "operationId": "QuizTest_GetQuizTestById",
+        "parameters": [
+          {
+            "name": "Id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultOfQuizTest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/QuizTest": {
+      "post": {
+        "tags": [
+          "QuizTest"
+        ],
+        "operationId": "QuizTest_Create",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTestCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/QuizTest/{id}": {
+      "put": {
+        "tags": [
+          "QuizTest"
+        ],
+        "operationId": "QuizTest_UpdateTest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTestCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/QuizTest/by-token/{token}": {
+      "get": {
+        "tags": [
+          "QuizTest"
+        ],
+        "operationId": "QuizTest_GetQuizTestByToken",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTestDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Surveillance": {
+      "post": {
+        "tags": [
+          "Surveillance"
+        ],
+        "operationId": "Surveillance_CreateSurveiilance",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSurveillanceCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Surveillance/GetSurveiilancesByTentative": {
+      "get": {
+        "tags": [
+          "Surveillance"
+        ],
+        "operationId": "Surveillance_GetSurveillancesByTentative",
+        "parameters": [
+          {
+            "name": "Id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetSurveillanceDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Tentative": {
+      "post": {
+        "tags": [
+          "Tentative"
+        ],
+        "operationId": "Tentative_Create",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTentativeCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/TestAccessToken": {
+      "post": {
+        "tags": [
+          "TestAccessToken"
+        ],
+        "operationId": "TestAccessToken_GenerateAccessToken",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateTokenAccessCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/TestAccessToken/{id}": {
+      "put": {
+        "tags": [
+          "TestAccessToken"
+        ],
+        "operationId": "TestAccessToken_UpdateAccessToken",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTestAccessTokenCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/TestAccessToken/{token}": {
+      "get": {
+        "tags": [
+          "TestAccessToken"
+        ],
+        "operationId": "TestAccessToken_GetTokenDetails",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTokenDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RegisterUserModel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nom": {
+            "type": "string",
+            "nullable": true
+          },
+          "prenom": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "LoginModel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "Result": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "CreateResponseCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "choiceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quizTestId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GetQuestionDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/QuestionType"
+          },
+          "answerDetails": {
+            "type": "string",
+            "nullable": true
+          },
+          "quizTestId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionChoice"
+            }
+          }
+        }
+      },
+      "QuestionType": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "SingleChoice",
+          "MultiChoice"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "QuestionChoice": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateQuestionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/QuestionType"
+          },
+          "answerDetails": {
+            "type": "string",
+            "nullable": true
+          },
+          "quizTestId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "listOfCorrectAnswerIds": {
+            "type": "string"
+          }
+        }
+      },
+      "ResultOfQuizTest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Result"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/QuizTest"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "QuizTest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "tryAgain": {
+            "type": "boolean"
+          },
+          "showTimer": {
+            "type": "boolean"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        }
+      },
+      "Category": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "None",
+          "General",
+          "Technical"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "Mode": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Training",
+          "Recrutement"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "Level": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Easy",
+          "Medium",
+          "Hard"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "Question": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/QuestionType"
+          },
+          "answerDetails": {
+            "type": "string",
+            "nullable": true
+          },
+          "_Choices": {
+            "type": "string"
+          },
+          "choices": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/QuestionChoice"
+            }
+          },
+          "quizTests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuizTest"
+            }
+          },
+          "listOfCorrectAnswerIds": {
+            "type": "string"
+          },
+          "reponses": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Reponse"
+            }
+          }
+        }
+      },
+      "Reponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "choiceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "question": {
+            "$ref": "#/components/schemas/Question"
+          },
+          "quizTestId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quizTest": {
+            "$ref": "#/components/schemas/QuizTest"
+          }
+        }
+      },
+      "CreateTestCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "tryAgain": {
+            "type": "boolean"
+          },
+          "showTimer": {
+            "type": "boolean"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          }
+        }
+      },
+      "UpdateTestCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "showTimer": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GetTestDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "tryAgain": {
+            "type": "boolean"
+          },
+          "showTimer": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          }
+        }
+      },
+      "CreateSurveillanceCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "captureEcran": {
+            "type": "string"
+          },
+          "tentativeId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GetSurveillanceDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "comportementSuspect": {
+            "type": "boolean"
+          },
+          "timeStamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "captureEcran": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateTentativeCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "passingDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "testId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GenerateTokenAccessCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "candidateEmail": {
+            "type": "string"
+          },
+          "expirationTime": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isUsed": {
+            "type": "boolean"
+          },
+          "testId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tentativeId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateTestAccessTokenCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isUsed": {
+            "type": "boolean"
+          },
+          "tentativeId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "GetTokenDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "expirationTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isUsed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "JWT": {
+        "type": "apiKey",
+        "description": "Type into the textbox: Bearer {your JWT token}.",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "JWT": []
+    }
+  ]
+}

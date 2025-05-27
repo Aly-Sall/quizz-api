@@ -1,0 +1,20 @@
+﻿version: '3.8'
+
+services:
+  # Application ASP.NET Core
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;Database=QuizzAppDb;User Id=sa;Password=DockerPasswordYg123;TrustServerCertificate=True;MultipleActiveResultSets=True;
+    networks:
+      - quizz-network
+
+networks:
+  quizz-network:
+    driver: bridge

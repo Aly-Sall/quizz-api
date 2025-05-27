@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <RootNamespace>_Net6CleanArchitectureQuizzApp.Application</RootNamespace>
+        <AssemblyName>_Net6CleanArchitectureQuizzApp.Application</AssemblyName>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="QuestionDev\Queries\GetQuizTestById\**" />
+      <Compile Remove="QuestionDev\Queries\GetQuizTestsByUserId\**" />
+      <Compile Remove="QuestionDev\Queries\GetQuizTests\**" />
+      <EmbeddedResource Remove="QuestionDev\Queries\GetQuizTestById\**" />
+      <EmbeddedResource Remove="QuestionDev\Queries\GetQuizTestsByUserId\**" />
+      <EmbeddedResource Remove="QuestionDev\Queries\GetQuizTests\**" />
+      <None Remove="QuestionDev\Queries\GetQuizTestById\**" />
+      <None Remove="QuestionDev\Queries\GetQuizTestsByUserId\**" />
+      <None Remove="QuestionDev\Queries\GetQuizTests\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="10.3.4" />
+        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+        <PackageReference Include="OpenAI" Version="2.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Domain\Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Account\" />
+      <Folder Include="Common\IJwtTokenGenerator\" />
+      <Folder Include="QuestionDev\Commands\CreateQuestionDev\" />
+      <Folder Include="ResponseDev\Queries\" />
+      <Folder Include="TentativeDev\Queries\" />
+      <Folder Include="TestDev\Commands\CreateQuizTest\" />
+      <Folder Include="TestDev\Queries\GetQuizTestsByUserId\" />
+      <Folder Include="TestDev\Queries\GetQuizTests\" />
+      <Folder Include="TodoItems\Queries\GetTodoItemsWithPagination\" />
+    </ItemGroup>
+
+</Project>
