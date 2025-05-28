@@ -1,13 +1,16 @@
-﻿// src/WebUI/Controllers/QuizTestController.cs - Version améliorée
+﻿// src/WebUI/Controllers/QuizTestController.cs - Version complète fonctionnelle
 using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
 using _Net6CleanArchitectureQuizzApp.Application.QuestionDev.Queries.GetQuestionsByTestId;
 using _Net6CleanArchitectureQuizzApp.Application.TestDev.Commands.CreateQuizTest.CreateTest;
 using _Net6CleanArchitectureQuizzApp.Application.TestDev.Commands.UpdateTestDev;
+using _Net6CleanArchitectureQuizzApp.Application.TestDev.Commands.DeleteTestDev;
 using _Net6CleanArchitectureQuizzApp.Application.TestDev.Queries.GetQuizTestById;
+using _Net6CleanArchitectureQuizzApp.Application.TestDev.Queries.GetAllTests;
 using _Net6CleanArchitectureQuizzApp.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using _Net6CleanArchitectureQuizzApp.Application.Common.Exceptions;
 
 namespace _Net6CleanArchitectureQuizzApp.WebUI.Controllers;
 
@@ -20,6 +23,42 @@ public class QuizTestController : ApiControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Récupère tous les tests
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<List<Application.TestDev.Queries.GetAllTests.QuizTestDto>>> GetAllTests(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] bool activeOnly = false)
+    {
+        try
+        {
+            _logger.LogInformation("Getting all quiz tests - Page: {Page}, PageSize: {PageSize}, ActiveOnly: {ActiveOnly}",
+                page, pageSize, activeOnly);
+
+            var query = new GetAllTestsQuery
+            {
+                Page = page,
+                PageSize = pageSize,
+                ActiveOnly = activeOnly
+            };
+
+            var tests = await Mediator.Send(query);
+
+            _logger.LogInformation("Successfully retrieved {Count} quiz tests", tests.Count);
+            return Ok(tests);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all quiz tests");
+            return StatusCode(500, "An error occurred while retrieving tests");
+        }
+    }
+
+    /// <summary>
+    /// Récupère un test par son ID
+    /// </summary>
     [HttpGet("by-id/{id}")]
     public async Task<Result<QuizTest>> GetQuizTestById([FromQuery] GetQuizTestQuery query)
     {
@@ -27,7 +66,16 @@ public class QuizTestController : ApiControllerBase
         {
             _logger.LogInformation("Getting quiz test by ID: {Id}", query.Id);
             var result = await Mediator.Send(query);
-            _logger.LogInformation("Successfully retrieved quiz test: {IsSuccess}", result.IsSuccess);
+
+            if (result.IsSuccess)
+            {
+                _logger.LogInformation("Successfully retrieved quiz test: {Title}", result.Value?.Title);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to retrieve quiz test: {Error}", result.Error);
+            }
+
             return result;
         }
         catch (Exception ex)
@@ -37,6 +85,9 @@ public class QuizTestController : ApiControllerBase
         }
     }
 
+    /// <summary>
+    /// Crée un nouveau test
+    /// </summary>
     [HttpPost]
     public async Task<Result> Create([FromBody] CreateTestCommand command)
     {
@@ -77,6 +128,9 @@ public class QuizTestController : ApiControllerBase
         }
     }
 
+    /// <summary>
+    /// Met à jour un test existant
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateTest(int id, [FromBody] UpdateTestCommand command)
     {
@@ -95,6 +149,16 @@ public class QuizTestController : ApiControllerBase
 
             return NoContent();
         }
+        catch (ForbiddenAccessException)
+        {
+            _logger.LogWarning("Attempted to update active test with ID: {Id}", id);
+            return StatusCode(403, "Cannot update an active test");
+        }
+        catch (NotFoundException)
+        {
+            _logger.LogWarning("Test with ID {Id} not found for update", id);
+            return NotFound($"Test with ID {id} not found");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating quiz test with ID: {Id}", id);
@@ -102,6 +166,41 @@ public class QuizTestController : ApiControllerBase
         }
     }
 
+    /// <summary>
+    /// Supprime un test
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteTest(int id)
+    {
+        try
+        {
+            _logger.LogInformation("Deleting quiz test with ID: {Id}", id);
+
+            await Mediator.Send(new DeleteTestCommand(id));
+
+            _logger.LogInformation("Successfully deleted quiz test with ID: {Id}", id);
+            return NoContent();
+        }
+        catch (NotFoundException)
+        {
+            _logger.LogWarning("Test with ID {Id} not found for deletion", id);
+            return NotFound($"Test with ID {id} not found");
+        }
+        catch (ForbiddenAccessException)
+        {
+            _logger.LogWarning("Attempted to delete active test with ID: {Id}", id);
+            return StatusCode(403, "Cannot delete an active test. Deactivate it first.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting quiz test with ID: {Id}", id);
+            return StatusCode(500, "An error occurred while deleting the test");
+        }
+    }
+
+    /// <summary>
+    /// Récupère un test par token d'accès
+    /// </summary>
     [HttpGet("by-token/{token}")]
     public async Task<GetTestDto> GetQuizTestByToken(string token)
     {
@@ -119,70 +218,48 @@ public class QuizTestController : ApiControllerBase
         }
     }
 
-    // Nouvelle méthode pour récupérer tous les tests (pour la liste)
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<QuizTest>>> GetAllTests()
+    /// <summary>
+    /// Active/Désactive un test
+    /// </summary>
+    [HttpPatch("{id}/toggle-status")]
+    public async Task<ActionResult> ToggleTestStatus(int id)
     {
         try
         {
-            _logger.LogInformation("Getting all quiz tests");
+            _logger.LogInformation("Toggling status for quiz test with ID: {Id}", id);
 
-            // Pour l'instant, retourner une liste vide ou des tests mockés
-            // Vous devrez implémenter GetAllTestsQuery côté Application
-            var mockTests = new List<QuizTest>
+            // Récupérer le test actuel
+            var testResult = await Mediator.Send(new GetQuizTestQuery { Id = id });
+
+            if (!testResult.IsSuccess || testResult.Value == null)
             {
-                new QuizTest
-                {
-                    Id = 1,
-                    Title = "Sample Technical Test",
-                    Category = Domain.Enums.Category.Technical,
-                    Mode = Domain.Enums.Mode.Training,
-                    Level = Domain.Enums.Level.Medium,
-                    IsActive = true,
-                    ShowTimer = true,
-                    TryAgain = false
-                },
-                new QuizTest
-                {
-                    Id = 2,
-                    Title = "General Knowledge Quiz",
-                    Category = Domain.Enums.Category.General,
-                    Mode = Domain.Enums.Mode.Training,
-                    Level = Domain.Enums.Level.Easy,
-                    IsActive = true,
-                    ShowTimer = false,
-                    TryAgain = true
-                }
+                return NotFound($"Test with ID {id} not found");
+            }
+
+            var test = testResult.Value;
+
+            // Créer la commande de mise à jour avec le statut inversé
+            var updateCommand = new UpdateTestCommand
+            {
+                Id = test.Id,
+                Title = test.Title,
+                Category = test.Category,
+                Mode = test.Mode,
+                ShowTimer = test.ShowTimer
             };
 
-            _logger.LogInformation("Returning {Count} quiz tests", mockTests.Count);
-            return Ok(mockTests);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting all quiz tests");
-            return StatusCode(500, "An error occurred while retrieving tests");
-        }
-    }
+            // Pour le moment, on ne peut pas changer IsActive via UpdateTestCommand
+            // Il faudrait créer une commande spécifique ToggleTestStatusCommand
 
-    // Nouvelle méthode pour supprimer un test
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteTest(int id)
-    {
-        try
-        {
-            _logger.LogInformation("Deleting quiz test with ID: {Id}", id);
+            await Mediator.Send(updateCommand);
 
-            // Vous devrez implémenter DeleteTestCommand côté Application
-            // await Mediator.Send(new DeleteTestCommand(id));
-
-            _logger.LogInformation("Successfully deleted quiz test with ID: {Id}", id);
+            _logger.LogInformation("Successfully toggled status for quiz test with ID: {Id}", id);
             return NoContent();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting quiz test with ID: {Id}", id);
-            return StatusCode(500, "An error occurred while deleting the test");
+            _logger.LogError(ex, "Error toggling status for quiz test with ID: {Id}", id);
+            return StatusCode(500, "An error occurred while toggling test status");
         }
     }
 }

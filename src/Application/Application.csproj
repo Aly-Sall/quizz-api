@@ -18,7 +18,9 @@
       <None Remove="QuestionDev\Queries\GetQuizTestById\**" />
       <None Remove="QuestionDev\Queries\GetQuizTestsByUserId\**" />
       <None Remove="QuestionDev\Queries\GetQuizTests\**" />
-      <None Remove="TestDev\Queries\GetAllTests\GetAllTestsQuery.proto" />
+      <None Remove="TestDev\Queries\GetAllTests\" />
+      <None Remove="TestDev\Queries\GetAllTests\GetAllTestsQuery.json" />
+      <None Remove="TestDev\Commands\DeleteTestDev\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -43,6 +45,8 @@
       <Folder Include="TestDev\Queries\GetQuizTestsByUserId\" />
       <Folder Include="TestDev\Queries\GetQuizTests\" />
       <Folder Include="TodoItems\Queries\GetTodoItemsWithPagination\" />
+      <Folder Include="TestDev\Queries\GetAllTests\" />
+      <Folder Include="TestDev\Commands\DeleteTestDev\" />
     </ItemGroup>
 
 </Project>
