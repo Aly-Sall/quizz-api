@@ -44,7 +44,9 @@ namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Register
             {
                 Email = request.Email,
                 Nom = request.Nom,
-                Prenom = request.Prenom
+                Prenom = request.Prenom,
+                UserName = request.Username
+
             };
 
             // Create the user in the identity system

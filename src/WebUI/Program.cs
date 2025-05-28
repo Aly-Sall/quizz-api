@@ -1,3 +1,4 @@
+// src/WebUI/Program.cs - Configuration CORS corrigée
 using _Net6CleanArchitectureQuizzApp.Application.Common.OpenAI;
 using _Net6CleanArchitectureQuizzApp.Infrastructure.Persistence;
 
@@ -8,11 +9,22 @@ builder.Services.AddHttpClient<OpenAIService>();
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddWebUIServices();
+
+// Configuration CORS - CORRIGÉE
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // allow your Angular app
+        policy.WithOrigins("http://localhost:4200") // Angular frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Important pour les cookies/auth si nécessaire
+    });
+
+    // Politique plus permissive pour le développement
+    options.AddPolicy("Development", policy =>
+    {
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -26,6 +38,9 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
 
+    // Utiliser la politique CORS pour le développement
+    app.UseCors("Development");
+
     // Initialise and seed database
     using (var scope = app.Services.CreateScope())
     {
@@ -36,12 +51,17 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
+    // Production: utiliser la politique restrictive
+    app.UseCors("AllowFrontend");
+
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHealthChecks("/health");
 app.UseStaticFiles();
+
+// Configuration Swagger/OpenAPI
 app.UseSwaggerUi(settings =>
 {
     settings.Path = "/swagger";
@@ -49,7 +69,10 @@ app.UseSwaggerUi(settings =>
 });
 
 app.UseRouting();
-app.UseCors("AllowFrontend");
+
+// IMPORTANT: L'ordre est crucial - CORS doit être avant Authentication/Authorization
+// app.UseCors() est déjà appelé plus haut selon l'environnement
+
 app.UseAuthentication();
 //app.UseIdentityServer();
 app.UseAuthorization();
@@ -60,7 +83,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-app.MapFallbackToFile("index.html"); ;
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

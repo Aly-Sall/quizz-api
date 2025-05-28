@@ -18,6 +18,7 @@
       <None Remove="QuestionDev\Queries\GetQuizTestById\**" />
       <None Remove="QuestionDev\Queries\GetQuizTestsByUserId\**" />
       <None Remove="QuestionDev\Queries\GetQuizTests\**" />
+      <None Remove="TestDev\Queries\GetAllTests\GetAllTestsQuery.proto" />
     </ItemGroup>
 
     <ItemGroup>
