@@ -1,4 +1,5 @@
-﻿using System;
+﻿// src/Application/QuestionDev/Commands/CreateQuestionDev/CreateQuestionHandler.cs - VERSION FINALE CORRIGÉE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,6 @@ using _Net6CleanArchitectureQuizzApp.Domain.Entities;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.QuestionDev.Commands.CreateQuestionDev;
 
@@ -17,102 +17,74 @@ public class CreateQuestionCommandHandler : IRequestHandler<CreateQuestionComman
 {
     private readonly IApplicationDbContext _context;
     private readonly IValidator<CreateQuestionCommand> _validator;
-    private readonly ILogger<CreateQuestionCommandHandler> _logger;
 
     public CreateQuestionCommandHandler(
         IApplicationDbContext context,
-        IValidator<CreateQuestionCommand> validator,
-        ILogger<CreateQuestionCommandHandler> logger)
+        IValidator<CreateQuestionCommand> validator)
     {
         _context = context;
         _validator = validator;
-        _logger = logger;
     }
 
     public async Task<Result> Handle(CreateQuestionCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            _logger.LogInformation("Creating question with content: {Content} for test: {TestId}",
-                request.Content, request.QuizTestId);
-
-            // Validation
+            // 1. Valider la commande
             var validationResult = await _validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
             {
                 var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
-                _logger.LogWarning("Validation failed: {Errors}", errors);
                 return Result.Failure(errors);
             }
 
-            // Vérifier que le test existe
-            var existedTest = await _context.Tests
-                .Include(t => t.Questions) // Inclure les questions pour la relation
+            // 2. Vérifier que le test existe
+            var existingTest = await _context.Tests
                 .FirstOrDefaultAsync(t => t.Id == request.QuizTestId, cancellationToken);
 
-            if (existedTest == null)
+            if (existingTest == null)
             {
-                _logger.LogWarning("Test with ID {TestId} not found", request.QuizTestId);
-                return Result.Failure("Test doesn't exist in database");
+                return Result.Failure($"Test with ID {request.QuizTestId} does not exist");
             }
 
-            // Valider les choix
+            // 3. Valider les choix
             if (request.Choices == null || !request.Choices.Any())
             {
-                _logger.LogWarning("No choices provided for question");
-                return Result.Failure("Question must have at least one choice");
+                return Result.Failure("At least one choice is required");
             }
 
-            // Créer la nouvelle question
+            if (request.Choices.Count < 2)
+            {
+                return Result.Failure("At least 2 choices are required");
+            }
+
+            // 4. Valider les réponses correctes
+            if (string.IsNullOrWhiteSpace(request.ListOfCorrectAnswerIds) ||
+                request.ListOfCorrectAnswerIds == "[]")
+            {
+                return Result.Failure("At least one correct answer must be specified");
+            }
+
+            // 5. ✅ CRÉER LA QUESTION avec l'association correcte au test
             var newQuestion = new Question
             {
-                Content = request.Content?.Trim() ?? string.Empty,
+                Content = request.Content.Trim(),
                 Type = request.Type,
-                AnswerDetails = request.AnswerDetails?.Trim(),
-                ListOfCorrectAnswerIds = request.ListOfCorrectAnswerIds ?? "[]",
-                // Initialiser les collections
-                QuizTests = new List<QuizTest>(),
-                Reponses = new List<Reponse>()
+                AnswerDetails = request.AnswerDetails?.Trim() ?? string.Empty,
+                QuizTestId = request.QuizTestId, // ✅ AJOUTÉ : Association avec le test
+                ListOfCorrectAnswerIds = request.ListOfCorrectAnswerIds,
+                Choices = request.Choices.ToArray()
             };
 
-            // IMPORTANT: Assigner les choix APRÈS la création de l'objet
-            // pour éviter les problèmes de sérialisation avec _Choices
-            try
-            {
-                newQuestion.Choices = request.Choices.ToArray();
-                _logger.LogInformation("Assigned {ChoiceCount} choices to question", request.Choices.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error serializing choices");
-                return Result.Failure("Error processing question choices");
-            }
-
-            // Établir la relation many-to-many
-            newQuestion.QuizTests.Add(existedTest);
-            // Ou alternativement : existedTest.Questions.Add(newQuestion);
-
-            // Sauvegarder la question
+            // 6. Sauvegarder en base
             await _context.Questions.AddAsync(newQuestion, cancellationToken);
-
-            _logger.LogInformation("Saving question to database...");
             await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Question created successfully with ID: {QuestionId}", newQuestion.Id);
             return Result.Success(newQuestion.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating question for test {TestId}: {Message}",
-                request.QuizTestId, ex.Message);
-
-            // Retourner des détails plus spécifiques selon le type d'erreur
-            if (ex.InnerException != null)
-            {
-                _logger.LogError("Inner exception: {InnerMessage}", ex.InnerException.Message);
-            }
-
-            return Result.Failure($"An error occurred while creating the question: {ex.Message}");
+            return Result.Failure("An error occurred while creating the question. Please try again.");
         }
     }
 }

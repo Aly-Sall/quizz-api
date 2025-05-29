@@ -1,4 +1,5 @@
-﻿using System;
+﻿// src/Domain/Entities/QuizTest.cs - VERSION CORRIGÉE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace _Net6CleanArchitectureQuizzApp.Domain.Entities;
+
 public class QuizTest : IEntity
 {
     public int Id { get; set; }
@@ -15,13 +17,14 @@ public class QuizTest : IEntity
     public Mode Mode { get; set; }
     public bool TryAgain { get; set; }
     public bool ShowTimer { get; set; }
-    //if the admin wants to make a training session , workers can see their asnwers 
-    //public bool makeRealTimeCorrection { get; set; }    
     public Level Level { get; set; }
-    public bool IsActive { get; set; }  
-    public int Duration { get; set; }   
-    //you can't modify the test while it is active !! for example , making changes while it is in use by others 
+    public bool IsActive { get; set; }
+    public int Duration { get; set; }
 
-    public ICollection<Question>? Questions { get; set; }
+    // ✅ CORRIGÉ : Relation One-to-Many avec Questions
+    // Un test peut avoir plusieurs questions, chaque question appartient à un seul test
+    public ICollection<Question>? Questions { get; set; } = new List<Question>();
+
+    // Autres relations...
     //public ICollection<AnalyseIA>? AnalyseIAs { get; set; }
 }
