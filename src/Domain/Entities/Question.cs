@@ -25,9 +25,7 @@ public class Question : IEntity
 
     //Response is the candidate answer 
     public ICollection<Reponse>? Reponses { get; set; } = new List<Reponse>();
-
-
-}
+ }
 public class QuestionChoice
 {
     public int Id { get; set; }

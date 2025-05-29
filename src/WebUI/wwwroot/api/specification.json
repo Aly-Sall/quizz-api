@@ -841,6 +841,12 @@
           },
           "listOfCorrectAnswerIds": {
             "type": "string"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionChoice"
+            }
           }
         }
       },

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
 using _Net6CleanArchitectureQuizzApp.Application.TestDev.Commands.CreateQuizTest.CreateTest;
+using _Net6CleanArchitectureQuizzApp.Domain.Entities;
 using _Net6CleanArchitectureQuizzApp.Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -19,6 +20,8 @@ public class CreateQuestionCommand : IRequest<Result>
     public string? AnswerDetails { get; set; }
     public int QuizTestId { get; set; }
     public string ListOfCorrectAnswerIds { get; set; }
+    public List<QuestionChoice> Choices { get; set; } = new();
+
 }
 
 public class CreateQuestionCommandValidator : AbstractValidator<CreateQuestionCommand>

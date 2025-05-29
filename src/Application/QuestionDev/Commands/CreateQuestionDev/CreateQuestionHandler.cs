@@ -42,8 +42,11 @@ public class CreateQuestionCommandHandler : IRequestHandler<CreateQuestionComman
                 Content = request.Content,
                 Type = request.Type,
                 AnswerDetails = request.AnswerDetails,
-                ListOfCorrectAnswerIds = request.ListOfCorrectAnswerIds
+                ListOfCorrectAnswerIds = request.ListOfCorrectAnswerIds,
+                Choices = request.Choices.ToArray()// 🔁 à ajouter dans la commande
             };
+
+
 
             await _context.Questions.AddAsync(newQuestion, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
