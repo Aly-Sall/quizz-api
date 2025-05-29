@@ -222,37 +222,6 @@
           "QuizTest"
         ],
         "operationId": "QuizTest_GetAllTests",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            },
-            "x-position": 1
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 50
-            },
-            "x-position": 2
-          },
-          {
-            "name": "activeOnly",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "x-position": 3
-          }
-        ],
         "responses": {
           "200": {
             "description": "",
@@ -260,9 +229,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/QuizTestDto"
-                  }
+                  "items": {}
                 }
               }
             }
@@ -333,146 +300,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResultOfQuizTest"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/QuizTest/{id}": {
-      "put": {
-        "tags": [
-          "QuizTest"
-        ],
-        "operationId": "QuizTest_UpdateTest",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTestCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "QuizTest"
-        ],
-        "operationId": "QuizTest_DeleteTest",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/QuizTest/by-token/{token}": {
-      "get": {
-        "tags": [
-          "QuizTest"
-        ],
-        "operationId": "QuizTest_GetQuizTestByToken",
-        "parameters": [
-          {
-            "name": "token",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetTestDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/QuizTest/{id}/toggle-status": {
-      "patch": {
-        "tags": [
-          "QuizTest"
-        ],
-        "operationId": "QuizTest_ToggleTestStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
                 }
               }
             }
@@ -850,82 +677,6 @@
           }
         }
       },
-      "QuizTestDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "category": {
-            "$ref": "#/components/schemas/Category"
-          },
-          "mode": {
-            "$ref": "#/components/schemas/Mode"
-          },
-          "tryAgain": {
-            "type": "boolean"
-          },
-          "showTimer": {
-            "type": "boolean"
-          },
-          "level": {
-            "$ref": "#/components/schemas/Level"
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "duration": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "Category": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "None",
-          "General",
-          "Technical"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "Mode": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Training",
-          "Recrutement"
-        ],
-        "enum": [
-          0,
-          1
-        ]
-      },
-      "Level": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "Easy",
-          "Medium",
-          "Hard"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
       "ResultOfQuizTest": {
         "allOf": [
           {
@@ -989,6 +740,46 @@
             }
           }
         }
+      },
+      "Category": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "None",
+          "General",
+          "Technical"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "Mode": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Training",
+          "Recrutement"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "Level": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Easy",
+          "Medium",
+          "Hard"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
       },
       "Question": {
         "type": "object",
@@ -1086,66 +877,6 @@
           },
           "level": {
             "$ref": "#/components/schemas/Level"
-          }
-        }
-      },
-      "UpdateTestCommand": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "category": {
-            "$ref": "#/components/schemas/Category"
-          },
-          "mode": {
-            "$ref": "#/components/schemas/Mode"
-          },
-          "showTimer": {
-            "type": "boolean"
-          }
-        }
-      },
-      "GetTestDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "tryAgain": {
-            "type": "boolean"
-          },
-          "showTimer": {
-            "type": "boolean"
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "mode": {
-            "$ref": "#/components/schemas/Mode"
-          },
-          "duration": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "questions": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "$ref": "#/components/schemas/Question"
-            }
           }
         }
       },
