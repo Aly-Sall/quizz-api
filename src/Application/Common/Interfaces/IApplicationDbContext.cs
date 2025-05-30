@@ -14,4 +14,5 @@ public interface IApplicationDbContext
     DbSet<TestAccessToken> TestAccessTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+    Task<int> SaveChangesAsync();
 }

@@ -53,10 +53,7 @@ public class CreateQuestionCommandHandler : IRequestHandler<CreateQuestionComman
                 return Result.Failure("At least one choice is required");
             }
 
-            if (request.Choices.Count < 2)
-            {
-                return Result.Failure("At least 2 choices are required");
-            }
+            
 
             // 4. Valider les réponses correctes
             if (string.IsNullOrWhiteSpace(request.ListOfCorrectAnswerIds) ||

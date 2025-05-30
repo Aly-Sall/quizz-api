@@ -12,7 +12,7 @@ using _Net6CleanArchitectureQuizzApp.Infrastructure.Persistence;
 namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250527102056_InitialCreate")]
+    [Migration("20250529212313_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,24 +33,36 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("AnswerDetails")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("ListOfCorrectAnswerIds")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasDefaultValue("[]");
+
+                    b.Property<int>("QuizTestId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.Property<string>("_Choices")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Choices");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("QuizTestId")
+                        .HasDatabaseName("IX_Questions_QuizTestId");
 
                     b.ToTable("Questions");
                 });
@@ -67,10 +79,14 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Duration")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(30);
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("Level")
                         .HasColumnType("int");
@@ -78,16 +94,25 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                     b.Property<int>("Mode")
                         .HasColumnType("int");
 
+                    b.Property<int?>("QuestionId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("ShowTimer")
                         .HasColumnType("bit");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("TryAgain")
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_QuizTests_IsActive");
+
+                    b.HasIndex("QuestionId");
 
                     b.ToTable("Tests");
                 });
@@ -137,7 +162,9 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.HasKey("Id");
 
@@ -180,7 +207,8 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
 
                     b.Property<string>("CandidateEmail")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime>("ExpirationTime")
                         .HasColumnType("datetime2");
@@ -196,9 +224,14 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TestAccessTokens_Token");
 
                     b.ToTable("TestAccessTokens");
                 });
@@ -232,7 +265,8 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Nom")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -252,7 +286,8 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Prenom")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -275,6 +310,60 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
@@ -324,6 +413,21 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
                     b.Property<int>("UserId")
@@ -345,19 +449,22 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("TestQuestionJoinTable", b =>
+            modelBuilder.Entity("_Net6CleanArchitectureQuizzApp.Domain.Entities.Question", b =>
                 {
-                    b.Property<int>("QuestionsId")
-                        .HasColumnType("int");
+                    b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.QuizTest", "QuizTest")
+                        .WithMany("Questions")
+                        .HasForeignKey("QuizTestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<int>("QuizTestsId")
-                        .HasColumnType("int");
+                    b.Navigation("QuizTest");
+                });
 
-                    b.HasKey("QuestionsId", "QuizTestsId");
-
-                    b.HasIndex("QuizTestsId");
-
-                    b.ToTable("TestQuestionJoinTable");
+            modelBuilder.Entity("_Net6CleanArchitectureQuizzApp.Domain.Entities.QuizTest", b =>
+                {
+                    b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.Question", null)
+                        .WithMany("QuizTests")
+                        .HasForeignKey("QuestionId");
                 });
 
             modelBuilder.Entity("_Net6CleanArchitectureQuizzApp.Domain.Entities.Reponse", b =>
@@ -371,7 +478,7 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                     b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.QuizTest", "QuizTest")
                         .WithMany()
                         .HasForeignKey("QuizTestId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Question");
@@ -401,6 +508,15 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                     b.Navigation("Test");
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.User", null)
@@ -419,6 +535,21 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
                     b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.User", null)
@@ -428,24 +559,16 @@ namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TestQuestionJoinTable", b =>
-                {
-                    b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.Question", null)
-                        .WithMany()
-                        .HasForeignKey("QuestionsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("_Net6CleanArchitectureQuizzApp.Domain.Entities.QuizTest", null)
-                        .WithMany()
-                        .HasForeignKey("QuizTestsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("_Net6CleanArchitectureQuizzApp.Domain.Entities.Question", b =>
                 {
+                    b.Navigation("QuizTests");
+
                     b.Navigation("Reponses");
+                });
+
+            modelBuilder.Entity("_Net6CleanArchitectureQuizzApp.Domain.Entities.QuizTest", b =>
+                {
+                    b.Navigation("Questions");
                 });
 
             modelBuilder.Entity("_Net6CleanArchitectureQuizzApp.Domain.Entities.Tentative", b =>

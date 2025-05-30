@@ -1,4 +1,4 @@
-﻿// src/Infrastructure/Persistence/ApplicationDbContext.cs - VERSION SIMPLIFIÉE FONCTIONNELLE
+﻿// src/Infrastructure/Persistence/ApplicationDbContext.cs - VERSION CORRIGÉE
 using System.Reflection;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Domain.Entities;
@@ -8,7 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Persistence;
 
-public class ApplicationDbContext : IdentityDbContext<IdentityUser<int>, IdentityRole<int>, int>, IApplicationDbContext
+// ✅ CORRIGÉ : Utiliser User au lieu de IdentityUser<int>
+public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -151,6 +152,20 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser<int>, Identit
                 .HasDatabaseName("IX_TestAccessTokens_Token");
         });
 
+        // ✅ Configuration Identity pour User personnalisé
+        builder.Entity<User>(entity =>
+        {
+            entity.Property(e => e.Nom)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Prenom)
+                .HasMaxLength(100);
+
+            // Email est déjà configuré par Identity, mais on peut ajuster
+            entity.Property(e => e.Email)
+                .HasMaxLength(256);
+        });
+
         // Appeler la configuration de base (Identity)
         base.OnModelCreating(builder);
     }
@@ -158,5 +173,10 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser<int>, Identit
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<int> SaveChangesAsync()
+    {
+        throw new NotImplementedException();
     }
 }

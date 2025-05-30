@@ -1,4 +1,5 @@
-﻿using System;
+﻿// src/Application/TestDev/Queries/GetQuizTestById/GetQuizTestHandler.cs - VERSION CORRIGÉE
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,12 +14,13 @@ using Microsoft.EntityFrameworkCore;
 using static System.Collections.Specialized.BitVector32;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.TestDev.Queries.GetQuizTestById;
+
 public record GetQuizTestQuery : IRequest<Result<QuizTest>>
 {
     //Query that will be sent , parameters
     public int Id { get; set; }
-
 }
+
 public class GetQuizTestHandler : IRequestHandler<GetQuizTestQuery, Result<QuizTest>>
 {
     private readonly IApplicationDbContext _context;
@@ -34,7 +36,7 @@ public class GetQuizTestHandler : IRequestHandler<GetQuizTestQuery, Result<QuizT
     {
         var quiz = await _context.Tests
                 .AsNoTracking()
-            .Where(q => q.Id == 1)
+            .Where(q => q.Id == request.Id) // ✅ CORRIGÉ : Utiliser request.Id au lieu de 1
             .Include(q => q.Questions)
             .Select(q => new QuizTest
             {
@@ -54,21 +56,18 @@ public class GetQuizTestHandler : IRequestHandler<GetQuizTestQuery, Result<QuizT
                     AnswerDetails = x.AnswerDetails,
                     _Choices = x._Choices,
                     ListOfCorrectAnswerIds = x.ListOfCorrectAnswerIds,
-                    // IMPORTANT: Exclude 'QuizTests' to prevent cyclic references
-                    QuizTests = new List<QuizTest>() // Avoid cycle
+                    // ✅ CORRIGÉ : Assigner les bonnes propriétés selon le nouveau modèle
+                    QuizTestId = x.QuizTestId,
+                    // Note: On n'assigne pas QuizTest pour éviter la référence circulaire
                 }).ToList()
             })
             .FirstOrDefaultAsync();
 
-
-
         if (quiz == null)
         {
-            return Result<QuizTest>.Failure("Session not found");
+            return Result<QuizTest>.Failure("Test not found");
         }
 
         return Result<QuizTest>.Success(quiz);
-
     }
 }
-

@@ -53,10 +53,11 @@ public class Question : IEntity
 
     // ✅ SIMPLIFIÉ : Relation One-to-Many avec les réponses des candidats
     public ICollection<Reponse>? Reponses { get; set; } = new List<Reponse>();
+    public List<QuizTest> QuizTests { get; set; }
 }
 
 public class QuestionChoice
 {
     public int Id { get; set; }
-    public string Content { get; set; } = null!;
+    public string Content { get; set; } = "";
 }
