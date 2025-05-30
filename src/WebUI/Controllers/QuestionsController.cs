@@ -76,6 +76,7 @@ public class QuestionsController : ApiControllerBase
         try
         {
             //_logger.LogInformation("Creating new question for test ID: {TestId}", command.QuizTestId);
+
             return await Mediator.Send(command);
         }
         catch (Exception ex)

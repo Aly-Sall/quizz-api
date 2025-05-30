@@ -10,9 +10,8 @@ namespace _Net6CleanArchitectureQuizzApp.Domain.Entities;
 
 public class User : IdentityUser<int>
 {
-        public  string? Nom { get; set; } 
-        public  string? Prenom { get; set; } 
-        public  string? Email { get; set; }
-
-    }
-
+    public string? Nom { get; set; }
+    public string? Prenom { get; set; }
+    // ✅ Supprimer cette ligne - Email existe déjà dans IdentityUser
+    // public string? Email { get; set; }
+}

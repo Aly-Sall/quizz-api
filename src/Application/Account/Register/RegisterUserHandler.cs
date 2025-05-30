@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ===== src/Application/Account/Register/RegisterUserHandler.cs =====
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,38 +19,34 @@ namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Register
     {
         private readonly UserManager<User> _userManager;
         private readonly IIdentityService _identityService;
-        //private readonly IValidator<RegisterUserModel> _validator;
 
         public RegisterUserHandler(
             UserManager<User> userManager,
             IIdentityService identityService)
-            //IValidator<RegisterUserModel> validator)
         {
             _userManager = userManager;
             _identityService = identityService;
-            //_validator = validator;
         }
 
         public async Task<Result> Handle(RegisterUserModel request, CancellationToken cancellationToken)
         {
-            // Validate the request
-            /////var validationResult = await _validator.ValidateAsync(request, cancellationToken);
-            //if (!validationResult.IsValid)
-            //{
-             //   return Result.Failure(validationResult.Errors.Select(e => e.ErrorMessage).ToArray());
-            //}
+            // Validation de l'email unique
+            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            if (existingUser != null)
+            {
+                return Result.Failure(new[] { "Un utilisateur avec cet email existe déjà." });
+            }
 
-            // Create new user object
             var user = new User
             {
                 Email = request.Email,
+                UserName = request.Email, // ✅ Important : utiliser email comme username
                 Nom = request.Nom,
                 Prenom = request.Prenom,
-                UserName = request.Username
-
+                EmailConfirmed = true,    // ✅ Confirmer directement
+                LockoutEnabled = false    // ✅ Éviter les blocages pour les tests
             };
 
-            // Create the user in the identity system
             var identityResult = await _userManager.CreateAsync(user, request.Password);
 
             if (!identityResult.Succeeded)
@@ -58,8 +55,7 @@ namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Register
                 return Result.Failure(errors);
             }
 
-
-            return Result.Success();
+            return Result.Success(user.Id);
         }
     }
 }

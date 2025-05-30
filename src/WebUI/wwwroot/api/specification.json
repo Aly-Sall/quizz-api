@@ -72,6 +72,39 @@
         }
       }
     },
+    "/api/Account/debug-login": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "Account_DebugLogin",
+        "requestBody": {
+          "x-name": "model",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginModel"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/CandidateAnswer": {
       "post": {
         "tags": [
