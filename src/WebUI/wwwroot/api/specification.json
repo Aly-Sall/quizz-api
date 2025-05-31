@@ -1070,12 +1070,6 @@
             "items": {
               "$ref": "#/components/schemas/Reponse"
             }
-          },
-          "quizTests": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/QuizTest"
-            }
           }
         }
       },

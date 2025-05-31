@@ -16,6 +16,10 @@
 
     <ItemGroup>
       <Folder Include="Interfaces\" />
+      <Folder Include="Common\Interfaces\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Common\Interfaces\" />
+    </ItemGroup>
 </Project>

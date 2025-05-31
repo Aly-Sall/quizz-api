@@ -21,6 +21,9 @@
       <None Remove="TestDev\Queries\GetAllTests\" />
       <None Remove="TestDev\Queries\GetAllTests\GetAllTestsQuery.json" />
       <None Remove="TestDev\Commands\DeleteTestDev\" />
+      <None Remove="TestInvitation\" />
+      <None Remove="TestInvitation\Commands\" />
+      <None Remove="TestInvitation\Commands\SendTestInvitation\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -47,6 +50,9 @@
       <Folder Include="TodoItems\Queries\GetTodoItemsWithPagination\" />
       <Folder Include="TestDev\Queries\GetAllTests\" />
       <Folder Include="TestDev\Commands\DeleteTestDev\" />
+      <Folder Include="TestInvitation\" />
+      <Folder Include="TestInvitation\Commands\" />
+      <Folder Include="TestInvitation\Commands\SendTestInvitation\" />
     </ItemGroup>
 
 </Project>
