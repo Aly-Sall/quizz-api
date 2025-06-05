@@ -56,7 +56,7 @@ public static class InfrastructureServices
 
         // ✅ Services d'application
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailService, ApplicationEmailService>();
 
         // ✅ JWT Token Generator simple
         services.AddScoped<IJwtTokenGenerator, SimpleJwtTokenGenerator>();
