@@ -25,6 +25,10 @@ public class Result
     public static Result Failure(string error) => new Result(false, error);
     public static Result Failure(string[] errors) => new Result(false, errors);
 
+    public static Result Failure(IEnumerable<string> enumerable)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 // Generic version if needed

@@ -1,103 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿// src/Application/Account/Commands/Login/LoginHandler.cs
+using System;
+using System.Threading;
 using System.Threading.Tasks;
-using _Net6CleanArchitectureQuizzApp.Domain.Entities;
-using _Net6CleanArchitectureQuizzApp.Domain.Interfaces;
+using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Login;
 
 public class LoginHandler : IRequestHandler<LoginModel, AuthResponse>
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IJwtTokenGenerator _tokenGenerator;
+    private readonly IAuthService _authService;
     private readonly ILogger<LoginHandler> _logger;
 
     public LoginHandler(
-        UserManager<User> userManager,
-        IJwtTokenGenerator tokenGenerator,
+        IAuthService authService,
         ILogger<LoginHandler> logger)
     {
-        _userManager = userManager;
-        _tokenGenerator = tokenGenerator;
+        _authService = authService;
         _logger = logger;
     }
 
     public async Task<AuthResponse> Handle(LoginModel request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("🔍 LOGIN ATTEMPT - Email: {Email}", request.Email);
-        _logger.LogInformation("🔍 Password length: {Length}", request.Password?.Length ?? 0);
 
-        // ✅ Chercher par email ET par username
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        _logger.LogInformation("🔍 User found by email: {Found}", user != null);
-
-        if (user == null)
+        try
         {
-            user = await _userManager.FindByNameAsync(request.Email);
-            _logger.LogInformation("🔍 User found by username: {Found}", user != null);
-        }
-
-        if (user == null)
-        {
-            _logger.LogWarning("❌ User not found for email: {Email}", request.Email);
-            throw new UnauthorizedAccessException("Email ou mot de passe incorrect");
-        }
-
-        _logger.LogInformation("🔍 User details - ID: {Id}, Email: {Email}, UserName: {UserName}",
-            user.Id, user.Email, user.UserName);
-        _logger.LogInformation("🔍 EmailConfirmed: {EmailConfirmed}, LockoutEnabled: {LockoutEnabled}",
-            user.EmailConfirmed, user.LockoutEnabled);
-
-        // ✅ Vérifier le verrouillage avant la validation du mot de passe
-        if (await _userManager.IsLockedOutAsync(user))
-        {
-            _logger.LogWarning("❌ Account locked out for user: {Email}", request.Email);
-            throw new UnauthorizedAccessException("Compte temporairement bloqué");
-        }
-
-        // ✅ Validation du mot de passe avec logs détaillés
-        var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
-        _logger.LogInformation("🔍 Password valid: {Valid}", isPasswordValid);
-
-        if (!isPasswordValid)
-        {
-            _logger.LogWarning("❌ Invalid password for user: {Email}", request.Email);
-
-            // ✅ Debug du hash de mot de passe
-            var hasPasswordHash = !string.IsNullOrEmpty(user.PasswordHash);
-            _logger.LogInformation("🔍 User has password hash: {HasHash}", hasPasswordHash);
-
-            if (hasPasswordHash)
+            // ✅ Validation de base
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
-                _logger.LogInformation("🔍 Password hash length: {Length}", user.PasswordHash?.Length ?? 0);
+                _logger.LogWarning("❌ Email or password is empty");
+                throw new UnauthorizedAccessException("Email et mot de passe requis");
             }
 
-            // ✅ Incrémenter les tentatives échouées
-            await _userManager.AccessFailedAsync(user);
+            // ✅ Déléguer l'authentification au service d'infrastructure
+            var result = await _authService.LoginAsync(request.Email.Trim(), request.Password);
 
-            throw new UnauthorizedAccessException("Email ou mot de passe incorrect");
+            if (result.IsSuccess)
+            {
+                _logger.LogInformation("✅ Login successful for user: {Email}", request.Email);
+
+                return new AuthResponse(
+                    Token: result.Token!,
+                    Expiry: result.Expiry!.Value,
+                    Nom: result.Nom,
+                    Prenom: result.Prenom,
+                    UserName: result.UserName,
+                    Email: result.Email
+                );
+            }
+            else
+            {
+                _logger.LogWarning("❌ Login failed for user: {Email} - {Error}", request.Email, result.ErrorMessage);
+                throw new UnauthorizedAccessException(result.ErrorMessage ?? "Email ou mot de passe incorrect");
+            }
         }
-
-        // ✅ Réinitialiser le compteur d'échecs en cas de succès
-        await _userManager.ResetAccessFailedCountAsync(user);
-
-        // ✅ Générer le token
-        var (token, expiry) = _tokenGenerator.GenerateToken(user);
-
-        _logger.LogInformation("✅ Login successful for user: {Email}", request.Email);
-
-        return new AuthResponse(
-            Token: token,
-            Expiry: expiry,
-            Nom: user.Nom,
-            Prenom: user.Prenom,
-            UserName: user.UserName,
-            Email: user.Email
-        );
+        catch (UnauthorizedAccessException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Unexpected error during login for: {Email}", request.Email);
+            throw new UnauthorizedAccessException("Une erreur s'est produite lors de la connexion");
+        }
     }
 }

@@ -1,90 +1,80 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿// src/Application/Account/Commands/Register/RegisterUserHandler.cs
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
-using _Net6CleanArchitectureQuizzApp.Domain.Constants;
-using _Net6CleanArchitectureQuizzApp.Domain.Entities;
-using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
-namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Register
+namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Register;
+
+public class RegisterUserHandler : IRequestHandler<RegisterUserModel, Result>
 {
-    public class RegisterUserHandler : IRequestHandler<RegisterUserModel, Result>
+    private readonly IAuthService _authService;
+    private readonly ILogger<RegisterUserHandler> _logger;
+
+    public RegisterUserHandler(
+        IAuthService authService,
+        ILogger<RegisterUserHandler> logger)
     {
-        private readonly UserManager<User> _userManager;
-        private readonly IIdentityService _identityService;
-        private readonly ILogger<RegisterUserHandler> _logger;
+        _authService = authService;
+        _logger = logger;
+    }
 
-        public RegisterUserHandler(
-            UserManager<User> userManager,
-            IIdentityService identityService,
-            ILogger<RegisterUserHandler> logger)
+    public async Task<Result> Handle(RegisterUserModel request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("🔍 REGISTRATION ATTEMPT - Email: {Email}", request.Email);
+
+        try
         {
-            _userManager = userManager;
-            _identityService = identityService;
-            _logger = logger;
-        }
-
-        public async Task<Result> Handle(RegisterUserModel request, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("🔍 REGISTRATION ATTEMPT - Email: {Email}", request.Email);
-
-            // ✅ Validation de l'email unique
-            var existingUser = await _userManager.FindByEmailAsync(request.Email);
-            if (existingUser != null)
+            // ✅ Validation de base
+            if (string.IsNullOrWhiteSpace(request.Email))
             {
-                _logger.LogWarning("❌ Email already exists: {Email}", request.Email);
-                return Result.Failure(new[] { "Un utilisateur avec cet email existe déjà." });
+                return Result.Failure("L'email est requis");
             }
 
-            // ✅ Validation du nom d'utilisateur unique
-            var existingUsername = await _userManager.FindByNameAsync(request.Email);
-            if (existingUsername != null)
+            if (string.IsNullOrWhiteSpace(request.Password))
             {
-                _logger.LogWarning("❌ Username already exists: {Email}", request.Email);
-                return Result.Failure(new[] { "Un utilisateur avec ce nom d'utilisateur existe déjà." });
+                return Result.Failure("Le mot de passe est requis");
             }
 
-            // ✅ Création de l'utilisateur
-            var user = new User
+            if (request.Password.Length < 6)
             {
-                Email = request.Email,
-                UserName = request.Email, // ✅ IMPORTANT : utiliser email comme username
-                NormalizedEmail = request.Email.ToUpper(),
-                NormalizedUserName = request.Email.ToUpper(),
-                Nom = request.Nom,
-                Prenom = request.Prenom,
-                EmailConfirmed = true,    // ✅ Confirmer directement pour éviter les problèmes
-                LockoutEnabled = false,   // ✅ Éviter les blocages pour les nouveaux utilisateurs
-                AccessFailedCount = 0,
-                TwoFactorEnabled = false,
-                PhoneNumberConfirmed = false
-            };
+                return Result.Failure("Le mot de passe doit contenir au moins 6 caractères");
+            }
 
-            _logger.LogInformation("🔍 Creating user with email: {Email}", user.Email);
-            _logger.LogInformation("🔍 Password length: {Length}", request.Password?.Length ?? 0);
+            var email = request.Email.Trim();
+            _logger.LogInformation("🔍 Processing registration for: {Email}", email);
 
-            // ✅ Création avec mot de passe
-            var identityResult = await _userManager.CreateAsync(user, request.Password);
-
-            if (!identityResult.Succeeded)
+            // ✅ Vérifier si l'utilisateur existe déjà
+            var userExists = await _authService.UserExistsAsync(email);
+            if (userExists)
             {
-                var errors = identityResult.Errors.Select(e => e.Description).ToArray();
+                _logger.LogWarning("❌ User already exists with email: {Email}", email);
+                return Result.Failure("Un utilisateur avec cet email existe déjà");
+            }
+
+            // ✅ Déléguer l'enregistrement au service d'infrastructure
+            var result = await _authService.RegisterAsync(email, request.Password, request.Nom, request.Prenom);
+
+            if (result.IsSuccess)
+            {
+                _logger.LogInformation("✅ User registered successfully: {Email} with ID: {Id}", email, result.UserId);
+                return Result.Success(result.UserId);
+            }
+            else
+            {
                 _logger.LogError("❌ Registration failed for {Email}: {Errors}",
-                    request.Email, string.Join(", ", errors));
-                return Result.Failure(errors);
+                    email, result.ErrorMessage ?? string.Join(", ", result.Errors ?? new string[0]));
+
+                return Result.Failure(result.ErrorMessage ?? string.Join(", ", result.Errors ?? new string[0]));
             }
-
-            _logger.LogInformation("✅ User created successfully: {Email} with ID: {Id}",
-                user.Email, user.Id);
-
-            return Result.Success(user.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Unexpected error during registration");
+            return Result.Failure($"Une erreur inattendue s'est produite: {ex.Message}");
         }
     }
 }
