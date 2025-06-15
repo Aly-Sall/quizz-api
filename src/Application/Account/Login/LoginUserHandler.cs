@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using MediatR;
+using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
 using Microsoft.Extensions.Logging;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Login;

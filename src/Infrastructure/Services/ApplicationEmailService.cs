@@ -1,59 +1,26 @@
-﻿// src/Infrastructure/Services/ApplicationEmailService.cs
-using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
-using Microsoft.Extensions.Logging;
+﻿using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 
 namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Services;
 
-/// <summary>
-/// Implémentation du service d'email pour l'application
-/// Nom modifié pour éviter les conflits avec d'autres EmailService
-/// </summary>
-public class ApplicationEmailService : IEmailService
+public class EmailService : IEmailService
 {
-    private readonly ILogger<ApplicationEmailService> _logger;
-
-    public ApplicationEmailService(ILogger<ApplicationEmailService> logger)
+    public async Task<bool> SendTestInvitationAsync(string email, string candidateName, string testTitle, string invitationLink, CancellationToken cancellationToken = default)
     {
-        _logger = logger;
-    }
-
-    public async Task<bool> SendTestInvitationAsync(
-        string recipientEmail,
-        string candidateName,
-        string testTitle,
-        string invitationLink,
-        CancellationToken cancellationToken = default)
-    {
-        // TODO: Implémenter l'envoi d'email réel avec SendGrid, SMTP, etc.
-        _logger.LogInformation("📧 SIMULATION: Sending test invitation email");
-        _logger.LogInformation("📧 To: {Email}", recipientEmail);
-        _logger.LogInformation("📧 Candidate: {Name}", candidateName);
-        _logger.LogInformation("📧 Test: {Title}", testTitle);
-        _logger.LogInformation("📧 Link: {Link}", invitationLink);
-
-        // Simuler un délai d'envoi
+        // Pour le moment, on simule l'envoi d'email
         await Task.Delay(100, cancellationToken);
 
-        // Simuler le succès pour le développement
-        _logger.LogInformation("✅ Email invitation sent successfully (simulated)");
+        Console.WriteLine($"📧 Email d'invitation envoyé à {email}");
+        Console.WriteLine($"   Candidat: {candidateName}");
+        Console.WriteLine($"   Test: {testTitle}");
+        Console.WriteLine($"   Lien: {invitationLink}");
+
         return true;
     }
 
-    public async Task<bool> SendEmailAsync(
-        string to,
-        string subject,
-        string body,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
     {
-        // TODO: Implémenter l'envoi d'email réel
-        _logger.LogInformation("📧 SIMULATION: Sending email");
-        _logger.LogInformation("📧 To: {To}", to);
-        _logger.LogInformation("📧 Subject: {Subject}", subject);
-        _logger.LogInformation("📧 Body length: {Length} characters", body.Length);
-
         await Task.Delay(100, cancellationToken);
-
-        _logger.LogInformation("✅ Email sent successfully (simulated)");
+        Console.WriteLine($"📧 Email envoyé à {to}: {subject}");
         return true;
     }
 }

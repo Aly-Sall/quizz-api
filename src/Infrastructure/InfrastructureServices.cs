@@ -8,6 +8,12 @@ using _Net6CleanArchitectureQuizzApp.Domain.Entities;
 using _Net6CleanArchitectureQuizzApp.Domain.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Infrastructure.Persistence;
 using _Net6CleanArchitectureQuizzApp.Infrastructure.Services;
+using _Net6CleanArchitectureQuizzApp.Infrastructure.Settings;
+using _Net6CleanArchitectureQuizzApp.Infrastructure.Identity; // ← AJOUTÉ pour IdentityService
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class InfrastructureServices
@@ -20,8 +26,13 @@ public static class InfrastructureServices
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
-        // ✅ Configuration d'Identity - VERSION SIMPLIFIÉE
-        services.AddDefaultIdentity<User>(options =>
+        // ✅ Configuration JWT Settings
+        var jwtSettings = new JwtSettings();
+        configuration.Bind(JwtSettings.SectionName, jwtSettings);
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(jwtSettings));
+
+        // ✅ Configuration d'Identity - VERSION SIMPLIFIÉE SANS RÔLES
+        services.AddIdentity<User, IdentityRole<int>>(options =>
         {
             // Options de mot de passe très permissives
             options.Password.RequireDigit = false;
@@ -47,39 +58,39 @@ public static class InfrastructureServices
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
-        // ✅ IMPORTANT: Enregistrer explicitement les gestionnaires Identity
-        services.AddScoped<UserManager<User>>();
-        services.AddScoped<SignInManager<User>>();
-
-        // ✅ Enregistrer RoleManager avec le type par défaut (IdentityRole au lieu de IdentityRole<int>)
-        services.AddScoped<RoleManager<IdentityRole>>();
+        // ✅ Configuration de l'authentification JWT
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidAudience = jwtSettings.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret!)),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
 
         // ✅ Services d'application
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IIdentityService, _Net6CleanArchitectureQuizzApp.Infrastructure.Identity.IdentityService>(); // ← AJOUTÉ cette ligne
 
-        // ✅ JWT Token Generator simple
-        services.AddScoped<IJwtTokenGenerator, SimpleJwtTokenGenerator>();
+        // ✅ JWT Token Generator CORRIGÉ
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
-        // ✅ Initialisation de la base de données (version simplifiée)
+        // ✅ Initialisation de la base de données
         services.AddScoped<ApplicationDbContextInitialiser>();
 
         return services;
-    }
-}
-
-// ✅ Implémentation simple du générateur JWT
-public class SimpleJwtTokenGenerator : IJwtTokenGenerator
-{
-    public (string Token, DateTime Expiry) GenerateToken(User user)
-    {
-        var expiry = DateTime.UtcNow.AddHours(24);
-        var token = $"simple-token-{user.Id}-{DateTime.UtcNow.Ticks}";
-        return (token, expiry);
-    }
-
-    public System.Security.Claims.ClaimsPrincipal? GetPrincipalFromToken(string token)
-    {
-        return null;
     }
 }

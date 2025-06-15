@@ -1,6 +1,7 @@
 ﻿using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
 using _Net6CleanArchitectureQuizzApp.Domain.Entities;
+using _Net6CleanArchitectureQuizzApp.Infrastructure.Extensions; // ← AJOUTER cette ligne
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

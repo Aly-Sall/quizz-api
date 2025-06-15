@@ -12,13 +12,13 @@ public class ApplicationDbContextInitialiser
     private readonly ApplicationDbContext _context;
     private readonly UserManager<User> _userManager;
     // ✅ Utiliser IdentityRole au lieu de IdentityRole<int>
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly RoleManager<IdentityRole<int>> _roleManager;
 
     public ApplicationDbContextInitialiser(
-        ILogger<ApplicationDbContextInitialiser> logger,
+         ILogger<ApplicationDbContextInitialiser> logger,
         ApplicationDbContext context,
         UserManager<User> userManager,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole<int>> roleManager)
     {
         _logger = logger;
         _context = context;
@@ -95,7 +95,7 @@ public class ApplicationDbContextInitialiser
                 if (!await _roleManager.RoleExistsAsync(roleName))
                 {
                     _logger.LogInformation("🔍 Creating role: {RoleName}", roleName);
-                    await _roleManager.CreateAsync(new IdentityRole(roleName));
+                    await _roleManager.CreateAsync(new IdentityRole<int>(roleName));
                     _logger.LogInformation("✅ Role created: {RoleName}", roleName);
                 }
             }

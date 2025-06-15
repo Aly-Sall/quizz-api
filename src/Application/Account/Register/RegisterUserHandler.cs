@@ -1,4 +1,4 @@
-﻿// src/Application/Account/Commands/Register/RegisterUserHandler.cs
+﻿// src/Application/Account/Register/RegisterUserHandler.cs
 using System;
 using System.Threading;
 using System.Threading.Tasks;

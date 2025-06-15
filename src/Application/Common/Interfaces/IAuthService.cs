@@ -1,5 +1,4 @@
-﻿// src/Application/Common/Interfaces/IAuthService.cs
-using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
+﻿using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 

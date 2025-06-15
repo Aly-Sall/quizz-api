@@ -24,6 +24,10 @@
     <ItemGroup>
       <Folder Include="Common\" />
       <Folder Include="Files\Maps\" />
+      <Folder Include="Extensions\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Extensions\" />
+    </ItemGroup>
 </Project>
