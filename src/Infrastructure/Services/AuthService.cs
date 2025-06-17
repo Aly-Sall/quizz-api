@@ -1,4 +1,4 @@
-﻿// src/Infrastructure/Services/AuthService.cs - VERSION SIMPLIFIÉE POUR TESTS
+﻿// src/Infrastructure/Services/AuthService.cs - CORRIGÉ POUR CANDIDATS
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
@@ -139,32 +139,68 @@ public class AuthService : IAuthService
         }
     }
 
-    // Méthodes temporaires pour les nouvelles fonctionnalités (à implémenter plus tard)
+    // ✅ MÉTHODE CORRIGÉE POUR GÉRER CORRECTEMENT ADMIN VS CANDIDAT
     public async Task<AuthResultWithRole> LoginWithRoleAsync(string email, string password, UserRole expectedRole)
     {
-        // Pour l'instant, on fait un login simple et on assume que c'est un admin
-        var result = await LoginAsync(email, password);
-
-        if (result.IsSuccess)
+        try
         {
-            // Récupérer l'utilisateur pour générer un token correct
+            _logger.LogInformation("🔍 Login with role attempt for {Email} as {Role}", email, expectedRole);
+
+            // Vérifier d'abord si l'utilisateur existe et si le mot de passe est correct
             var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            if (user == null)
+            {
+                _logger.LogWarning("❌ User not found: {Email}", email);
+                return AuthResultWithRole.Failure("Email ou mot de passe incorrect");
+            }
+
+            var passwordValid = await _userManager.CheckPasswordAsync(user, password);
+            if (!passwordValid)
+            {
+                _logger.LogWarning("❌ Invalid password for user: {Email}", email);
+                return AuthResultWithRole.Failure("Email ou mot de passe incorrect");
+            }
+
+            _logger.LogInformation("✅ User credentials validated for {Email}", email);
+
+            // ✅ Pour les admins, générer et retourner un token JWT
+            if (expectedRole == UserRole.Administrator)
             {
                 var tokenResult = _jwtTokenGenerator.GenerateToken(user);
+
+                _logger.LogInformation("✅ Admin token generated for {Email}", email);
 
                 return AuthResultWithRole.Success(
                     tokenResult.Token,
                     tokenResult.Expiry,
-                    result.Email!,
-                    result.Nom ?? "",
-                    result.Prenom ?? "",
+                    user.Email!,
+                    user.Nom ?? "",
+                    user.Prenom ?? "",
                     UserRole.Administrator
                 );
             }
-        }
 
-        return AuthResultWithRole.Failure(result.ErrorMessage ?? "Connexion échouée");
+            // ✅ Pour les candidats, NE PAS générer de token JWT
+            // Retourner juste les infos utilisateur sans token
+            if (expectedRole == UserRole.Candidate)
+            {
+                _logger.LogInformation("✅ Candidate credentials validated for {Email} - no token generated", email);
+
+                return AuthResultWithRole.SuccessWithoutToken(
+                    user.Email!,
+                    user.Nom ?? "",
+                    user.Prenom ?? "",
+                    UserRole.Candidate
+                );
+            }
+
+            return AuthResultWithRole.Failure("Rôle non supporté");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error during login with role for {Email}", email);
+            return AuthResultWithRole.Failure("Une erreur s'est produite lors de la connexion");
+        }
     }
 
     public async Task<CandidateAccessResult> VerifyCandidateAccessAsync(string accessToken)
