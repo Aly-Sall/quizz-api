@@ -1,5 +1,4 @@
-﻿// src/Application/Account/Models/AuthResults.cs - NOUVEAU FICHIER
-using _Net6CleanArchitectureQuizzApp.Domain.Enums;
+﻿using _Net6CleanArchitectureQuizzApp.Domain.Enums;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Account.Models;
 
@@ -13,8 +12,10 @@ public class AuthResult
     public string? Prenom { get; set; }
     public UserRole? UserRole { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? UserId { get; set; }
+    public string[]? Errors { get; set; }
 
-    public static AuthResult Success(string? token, DateTime? expiry, string email, string nom, string prenom, UserRole userRole)
+    public static AuthResult Success(string? token, DateTime? expiry, string email, string? nom, string? prenom, string userId)
     {
         return new AuthResult
         {
@@ -24,7 +25,7 @@ public class AuthResult
             Email = email,
             Nom = nom,
             Prenom = prenom,
-            UserRole = userRole
+            UserId = userId
         };
     }
 
@@ -46,10 +47,17 @@ public class CandidateAccessResult
     public string? Email { get; set; }
     public string? Nom { get; set; }
     public string? Prenom { get; set; }
-    public List<TestDto>? AvailableTests { get; set; }
+    // SPÉCIFIER EXPLICITEMENT le namespace complet pour éviter la confusion
+    public List<_Net6CleanArchitectureQuizzApp.Application.Account.Models.TestDto>? AvailableTests { get; set; }
     public string? ErrorMessage { get; set; }
 
-    public static CandidateAccessResult Success(string authToken, DateTime expiry, string email, string nom, string prenom, List<TestDto> availableTests)
+    public static CandidateAccessResult Success(
+        string authToken,
+        DateTime expiry,
+        string email,
+        string? nom,
+        string? prenom,
+        List<_Net6CleanArchitectureQuizzApp.Application.Account.Models.TestDto> availableTests)
     {
         return new CandidateAccessResult
         {
@@ -70,5 +78,10 @@ public class CandidateAccessResult
             IsSuccess = false,
             ErrorMessage = errorMessage
         };
+    }
+
+    public static implicit operator CandidateAccessResult(Common.Interfaces.CandidateAccessResult v)
+    {
+        throw new NotImplementedException();
     }
 }

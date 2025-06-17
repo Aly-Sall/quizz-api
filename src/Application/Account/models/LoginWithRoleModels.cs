@@ -1,4 +1,4 @@
-﻿// src/Application/Account/Models/LoginWithRoleModels.cs - NOUVEAU FICHIER
+﻿// src/Application/Account/Models/LoginWithRoleModels.cs - Version complète
 using _Net6CleanArchitectureQuizzApp.Domain.Enums;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Account.Models;

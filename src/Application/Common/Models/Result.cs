@@ -8,6 +8,7 @@ public class Result
     public string?[] Errors { get; set; }
 
     public int? Id { get; } // Optional ID for created entities
+    public object Value { get; set; }
 
     protected Result(bool isSuccess, string error, int? id = -1)
     {

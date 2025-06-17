@@ -1,10 +1,9 @@
-﻿// src/Application/Account/Register/RegisterUserHandler.cs
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿// src/Application/Account/Commands/Register/RegisterUserHandler.cs - CORRECTIONS
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
+using _Net6CleanArchitectureQuizzApp.Domain.Entities;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Register;
@@ -22,7 +21,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserModel, Result>
         _logger = logger;
     }
 
-    public async Task<Result> Handle(RegisterUserModel request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(RegisterUserModel request, CancellationToken cancellationToken) // CORRIGÉ: Result au lieu de Task<r>
     {
         _logger.LogInformation("🔍 REGISTRATION ATTEMPT - Email: {Email}", request.Email);
 

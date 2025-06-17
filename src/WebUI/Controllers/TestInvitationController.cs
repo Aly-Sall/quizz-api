@@ -1,4 +1,4 @@
-﻿/*using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
+﻿using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
 using _Net6CleanArchitectureQuizzApp.Application.TestInvitation.Commands.SendTestInvitation;
 using Microsoft.AspNetCore.Mvc;
 
@@ -80,4 +80,4 @@ public class CandidateInvitation
 {
     public string Email { get; set; } = null!;
     public string Name { get; set; } = null!;
-}*/
+}

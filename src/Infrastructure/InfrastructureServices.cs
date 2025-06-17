@@ -9,7 +9,7 @@ using _Net6CleanArchitectureQuizzApp.Domain.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Infrastructure.Persistence;
 using _Net6CleanArchitectureQuizzApp.Infrastructure.Services;
 using _Net6CleanArchitectureQuizzApp.Infrastructure.Settings;
-using _Net6CleanArchitectureQuizzApp.Infrastructure.Identity; // ← AJOUTÉ pour IdentityService
+using _Net6CleanArchitectureQuizzApp.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -83,10 +83,16 @@ public static class InfrastructureServices
         // ✅ Services d'application
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<IIdentityService, _Net6CleanArchitectureQuizzApp.Infrastructure.Identity.IdentityService>(); // ← AJOUTÉ cette ligne
+        services.AddScoped<IIdentityService, IdentityService>();
 
-        // ✅ JWT Token Generator CORRIGÉ
+        // ✅ AJOUT DU SERVICE MANQUANT - CandidateInvitationService
+        services.AddScoped<ICandidateInvitationService, CandidateInvitationService>();
+
+        // ✅ JWT Token Generator
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        // ✅ Autres services utilitaires
+        services.AddScoped<IDateTime, DateTimeService>();
 
         // ✅ Initialisation de la base de données
         services.AddScoped<ApplicationDbContextInitialiser>();

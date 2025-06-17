@@ -6,7 +6,7 @@ namespace _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 
 public interface IJwtTokenGenerator
 {
-    (string Token, DateTime Expiry) GenerateToken(User user);
+    (string Token, DateTime Expiry) GenerateToken(string v, string v1, User user);
 
     // AJOUTER cette surcharge pour la flexibilité
     string GenerateToken(string userId, string email, string[] roles);

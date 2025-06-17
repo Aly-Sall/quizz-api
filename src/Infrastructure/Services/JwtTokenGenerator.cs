@@ -1,4 +1,4 @@
-﻿// src/Infrastructure/Services/JwtTokenGenerator.cs - REMPLACER LE CONTENU EXISTANT
+﻿// src/Infrastructure/Services/JwtTokenGenerator.cs - TOUTES LES SURCHARGES
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -19,16 +19,16 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         _jwtSettings = jwtOptions.Value;
     }
 
+    // MÉTHODE 1 : Retourne un tuple (string Token, DateTime Expiry)
     public (string Token, DateTime Expiry) GenerateToken(User user)
     {
-        // Ensure required values aren't null
-        var userId = user?.Id ?? throw new ArgumentNullException(nameof(user));
-        var userEmail = user?.Email ?? throw new ArgumentNullException(nameof(user.Email));
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
 
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, userEmail),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -44,10 +44,32 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             signingCredentials: creds
         );
 
-        return (new JwtSecurityTokenHandler().WriteToken(token), expiry);
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        return (tokenString, expiry);
     }
 
-    // AJOUTER cette nouvelle méthode
+    // MÉTHODE 2 : GenerateToken(string, string, User) - retourne string
+    public string GenerateToken(string userId, string email, User user)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        if (user != null)
+        {
+            if (!string.IsNullOrEmpty(user.Nom))
+                claims.Add(new Claim("nom", user.Nom));
+            if (!string.IsNullOrEmpty(user.Prenom))
+                claims.Add(new Claim("prenom", user.Prenom));
+        }
+
+        return GenerateTokenInternal(claims);
+    }
+
+    // MÉTHODE 3 : GenerateToken(string, string, string[]) - retourne string
     public string GenerateToken(string userId, string email, string[] roles)
     {
         var claims = new List<Claim>
@@ -57,7 +79,6 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        // Ajouter les rôles
         if (roles != null)
         {
             foreach (var role in roles.Where(r => !string.IsNullOrWhiteSpace(r)))
@@ -66,6 +87,36 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             }
         }
 
+        return GenerateTokenInternal(claims);
+    }
+
+    // MÉTHODE 4 : ClaimsPrincipal
+    public ClaimsPrincipal? GetPrincipalFromToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret!)),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = false
+            }, out _);
+
+            return principal;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // MÉTHODE HELPER PRIVÉE pour éviter la duplication
+    private string GenerateTokenInternal(List<Claim> claims)
+    {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiry = DateTime.UtcNow.AddMinutes(_jwtSettings.TokenLifetimeMinutes);
@@ -79,28 +130,5 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    public ClaimsPrincipal? GetPrincipalFromToken(string token)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-
-        try
-        {
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret!)),
-                ValidateIssuer = false,  // For refresh validation only
-                ValidateAudience = false,
-                ValidateLifetime = false  // Allow expired tokens
-            }, out _);
-
-            return principal;
-        }
-        catch
-        {
-            return null;
-        }
     }
 }
