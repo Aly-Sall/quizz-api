@@ -1,11 +1,13 @@
-﻿// src/Infrastructure/Services/AuthService.cs - CORRIGÉ POUR CANDIDATS
+﻿// src/Infrastructure/Services/AuthService.cs - CODE COMPLET CORRIGÉ
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Domain.Entities;
 using _Net6CleanArchitectureQuizzApp.Domain.Enums;
-
+using _Net6CleanArchitectureQuizzApp.Application.Account.Models;
+using static _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces.IAuthService;
 namespace _Net6CleanArchitectureQuizzApp.Infrastructure.Services;
+
 
 public class AuthService : IAuthService
 {
@@ -42,7 +44,6 @@ public class AuthService : IAuthService
             var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
             if (result.Succeeded)
             {
-                // CORRIGÉ : Utiliser la signature correcte qui retourne un tuple
                 var tokenResult = _jwtTokenGenerator.GenerateToken(user);
 
                 _logger.LogInformation("✅ Login successful for: {Email}", email);
@@ -74,7 +75,6 @@ public class AuthService : IAuthService
         {
             _logger.LogInformation("🔍 Registration attempt for: {Email}", email);
 
-            // Vérifier si l'utilisateur existe déjà
             var existingUser = await _userManager.FindByEmailAsync(email);
             if (existingUser != null)
             {
@@ -82,14 +82,13 @@ public class AuthService : IAuthService
                 return AuthResult.Failure("Un utilisateur avec cet email existe déjà");
             }
 
-            // Créer le nouvel utilisateur - UTILISER SEULEMENT LES CHAMPS QUI EXISTENT
             var user = new User
             {
                 UserName = email,
                 Email = email,
                 Nom = nom ?? "",
                 Prenom = prenom ?? "",
-                EmailConfirmed = true // Simplifier pour les tests
+                EmailConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(user, password);
@@ -98,7 +97,6 @@ public class AuthService : IAuthService
             {
                 _logger.LogInformation("✅ User registered successfully: {Email}", email);
 
-                // CORRIGÉ : Utiliser la signature correcte qui retourne un tuple
                 var tokenResult = _jwtTokenGenerator.GenerateToken(user);
 
                 return AuthResult.Success(
@@ -139,14 +137,13 @@ public class AuthService : IAuthService
         }
     }
 
-    // ✅ MÉTHODE CORRIGÉE POUR GÉRER CORRECTEMENT ADMIN VS CANDIDAT
+    // ✅ MÉTHODE CORRIGÉE POUR GÉRER ADMIN VS CANDIDAT
     public async Task<AuthResultWithRole> LoginWithRoleAsync(string email, string password, UserRole expectedRole)
     {
         try
         {
             _logger.LogInformation("🔍 Login with role attempt for {Email} as {Role}", email, expectedRole);
 
-            // Vérifier d'abord si l'utilisateur existe et si le mot de passe est correct
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -181,7 +178,6 @@ public class AuthService : IAuthService
             }
 
             // ✅ Pour les candidats, NE PAS générer de token JWT
-            // Retourner juste les infos utilisateur sans token
             if (expectedRole == UserRole.Candidate)
             {
                 _logger.LogInformation("✅ Candidate credentials validated for {Email} - no token generated", email);
@@ -205,7 +201,6 @@ public class AuthService : IAuthService
 
     public async Task<CandidateAccessResult> VerifyCandidateAccessAsync(string accessToken)
     {
-        // Méthode temporaire - à implémenter plus tard
         await Task.Delay(1);
         return CandidateAccessResult.Failure("Fonctionnalité candidat pas encore implémentée");
     }
