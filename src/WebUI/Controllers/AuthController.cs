@@ -1,91 +1,129 @@
-﻿using _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Login;
-using _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Register;
-using _Net6CleanArchitectureQuizzApp.Domain.Entities;
-using MediatR;
-using Microsoft.AspNetCore.Identity;
+﻿// src/WebUI/Controllers/AuthController.cs - Nouveau
+using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Net6CleanArchitectureQuizzApp.WebUI.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
-    public class AccountController : ApiControllerBase
+    private readonly IAuthService _authService;
+    private readonly IEmailService _emailService;
+    private readonly ITestInvitationService _testInvitationService;
+    private readonly ILogger<AuthController> _logger;
+
+    public AuthController(
+        IAuthService authService,
+        IEmailService emailService,
+        ITestInvitationService testInvitationService,
+        ILogger<AuthController> logger)
     {
-        private readonly IMediator _mediator;
-        private readonly UserManager<User> _userManager;
+        _authService = authService;
+        _emailService = emailService;
+        _testInvitationService = testInvitationService;
+        _logger = logger;
+    }
 
-        public AccountController(IMediator mediator, UserManager<User> userManager)
+    [HttpPost("login-with-role")]
+    public async Task<IActionResult> LoginWithRole([FromBody] LoginWithRoleRequest request)
+    {
+        try
         {
-            _mediator = mediator;
-            _userManager = userManager;
-        }
-
-        /// <summary>
-        /// Registers a new user.
-        /// </summary>
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterUserModel model)
-        {
-            var result = await _mediator.Send(model);
+            var result = await _authService.LoginWithRoleAsync(request.Email, request.Password, request.UserRole);
 
             if (result.IsSuccess)
-                return Ok(result);
-
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Logs in a user and returns a JWT token.
-        /// </summary>
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
-        {
-            try
             {
-                var authResponse = await _mediator.Send(model);
-                return Ok(authResponse);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Debug endpoint pour tester l'authentification
-        /// </summary>
-        [HttpPost("debug-login")]
-        public async Task<IActionResult> DebugLogin([FromBody] LoginModel model)
-        {
-            try
-            {
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null)
+                if (request.UserRole == UserRole.Administrator)
                 {
-                    user = await _userManager.FindByNameAsync(model.Email);
+                    // Admin - retourner directement le token
+                    return Ok(new AuthResponse
+                    {
+                        Token = result.Token,
+                        Expiry = result.Expiry.Value,
+                        UserRole = result.UserRole,
+                        Email = result.Email,
+                        Nom = result.Nom,
+                        Prenom = result.Prenom,
+                        RequiresEmailInvitation = false
+                    });
                 }
-
-                if (user == null)
-                    return Ok(new { found = false, message = "User not found by email or username" });
-
-                var passwordCheck = await _userManager.CheckPasswordAsync(user, model.Password);
-                var isLockedOut = await _userManager.IsLockedOutAsync(user);
-
-                return Ok(new
+                else if (request.UserRole == UserRole.Candidate)
                 {
-                    found = true,
-                    passwordValid = passwordCheck,
-                    userId = user.Id,
-                    email = user.Email,
-                    userName = user.UserName,
-                    emailConfirmed = user.EmailConfirmed,
-                    lockoutEnabled = user.LockoutEnabled,
-                    isLockedOut = isLockedOut,
-                    accessFailedCount = user.AccessFailedCount
-                });
+                    // Candidat - envoyer email d'invitation
+                    await _testInvitationService.SendCandidateInvitationEmailAsync(result.Email, result.Nom);
+
+                    return Ok(new AuthResponse
+                    {
+                        Message = "Un email d'invitation vous a été envoyé. Veuillez vérifier votre boîte mail.",
+                        Email = result.Email,
+                        RequiresEmailInvitation = true,
+                        UserRole = result.UserRole
+                    });
+                }
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
-            }
+
+            return BadRequest(new { error = result.ErrorMessage });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la connexion");
+            return StatusCode(500, new { error = "Une erreur s'est produite" });
         }
     }
+
+    [HttpPost("verify-candidate-access")]
+    public async Task<IActionResult> VerifyCandidateAccess([FromBody] VerifyCandidateAccessRequest request)
+    {
+        try
+        {
+            var result = await _authService.VerifyCandidateAccessAsync(request.Token);
+
+            if (result.IsSuccess)
+            {
+                return Ok(new AuthResponse
+                {
+                    Token = result.AuthToken,
+                    Expiry = result.Expiry.Value,
+                    UserRole = UserRole.Candidate,
+                    Email = result.Email,
+                    Nom = result.Nom,
+                    Prenom = result.Prenom,
+                    RequiresEmailInvitation = false,
+                    AvailableTests = result.AvailableTests
+                });
+            }
+
+            return BadRequest(new { error = result.ErrorMessage });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la vérification d'accès candidat");
+            return StatusCode(500, new { error = "Une erreur s'est produite" });
+        }
+    }
+}
+
+// Modèles de requête
+public class LoginWithRoleRequest
+{
+    public string Email { get; set; } = null!;
+    public string Password { get; set; } = null!;
+    public UserRole UserRole { get; set; }
+}
+
+public class VerifyCandidateAccessRequest
+{
+    public string Token { get; set; } = null!;
+}
+
+public class AuthResponse
+{
+    public string? Token { get; set; }
+    public DateTime? Expiry { get; set; }
+    public UserRole? UserRole { get; set; }
+    public string? Email { get; set; }
+    public string? Nom { get; set; }
+    public string? Prenom { get; set; }
+    public string? Message { get; set; }
+    public bool RequiresEmailInvitation { get; set; }
+    public List<TestDto>? AvailableTests { get; set; }
 }

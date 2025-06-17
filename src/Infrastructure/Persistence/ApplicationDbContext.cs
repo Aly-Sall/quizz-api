@@ -22,6 +22,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     public DbSet<Surveillance> Surveillances => Set<Surveillance>();
     public DbSet<Tentative> Tentatives => Set<Tentative>();
     public DbSet<TestAccessToken> TestAccessTokens => Set<TestAccessToken>();
+    public DbSet<CandidateAccessToken> CandidateAccessTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -52,6 +53,25 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
                 .HasDatabaseName("IX_QuizTests_IsActive");
         });
 
+        builder.Entity<CandidateAccessToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Token)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.HasIndex(e => e.Token)
+                .IsUnique()
+                .HasDatabaseName("IX_CandidateAccessTokens_Token");
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.CandidateAccessTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        
         // Configuration Question
         builder.Entity<Question>(entity =>
         {
@@ -120,6 +140,24 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        builder.Entity<CandidateAccessToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Token)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.HasIndex(e => e.Token)
+                .IsUnique()
+                .HasDatabaseName("IX_CandidateAccessTokens_Token");
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.CandidateAccessTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Configuration Surveillance
         builder.Entity<Surveillance>(entity =>
         {
@@ -150,6 +188,22 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
             entity.HasIndex(e => e.Token)
                 .IsUnique()
                 .HasDatabaseName("IX_TestAccessTokens_Token");
+        });
+
+        builder.Entity<User>(entity =>
+        {
+            entity.Property(e => e.Nom)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Prenom)
+                .HasMaxLength(100);
+
+            // Configurer l'enum UserRole
+            entity.Property(e => e.UserRole)
+                .HasConversion<int>();
+
+            entity.Property(e => e.Email)
+                .HasMaxLength(256);
         });
 
         // ✅ Configuration Identity pour User personnalisé
