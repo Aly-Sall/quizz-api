@@ -1,8 +1,8 @@
-﻿using _Net6CleanArchitectureQuizzApp.Domain.Enums;
+﻿// Dans votre fichier AuthResults.cs existant, ajoutez cette classe manquante :
 
-namespace _Net6CleanArchitectureQuizzApp.Application.Account.Models;
+using _Net6CleanArchitectureQuizzApp.Domain.Enums;
 
-public class AuthResult
+public class AuthResultWithRole
 {
     public bool IsSuccess { get; set; }
     public string? Token { get; set; }
@@ -10,14 +10,14 @@ public class AuthResult
     public string? Email { get; set; }
     public string? Nom { get; set; }
     public string? Prenom { get; set; }
-    public UserRole? UserRole { get; set; }
+    public UserRole UserRole { get; set; }
     public string? ErrorMessage { get; set; }
-    public string? UserId { get; set; }
     public string[]? Errors { get; set; }
 
-    public static AuthResult Success(string? token, DateTime? expiry, string email, string? nom, string? prenom, string userId)
+    // ✅ Méthode existante pour admin avec token
+    public static AuthResultWithRole Success(string token, DateTime expiry, string email, string nom, string prenom, UserRole userRole)
     {
-        return new AuthResult
+        return new AuthResultWithRole
         {
             IsSuccess = true,
             Token = token,
@@ -25,63 +25,41 @@ public class AuthResult
             Email = email,
             Nom = nom,
             Prenom = prenom,
-            UserId = userId
+            UserRole = userRole
         };
     }
 
-    public static AuthResult Failure(string errorMessage)
+    // ✅ NOUVELLE MÉTHODE : Pour candidats SANS token
+    public static AuthResultWithRole SuccessWithoutToken(string email, string nom, string prenom, UserRole userRole)
     {
-        return new AuthResult
-        {
-            IsSuccess = false,
-            ErrorMessage = errorMessage
-        };
-    }
-}
-
-public class CandidateAccessResult
-{
-    public bool IsSuccess { get; set; }
-    public string? AuthToken { get; set; }
-    public DateTime? Expiry { get; set; }
-    public string? Email { get; set; }
-    public string? Nom { get; set; }
-    public string? Prenom { get; set; }
-    // SPÉCIFIER EXPLICITEMENT le namespace complet pour éviter la confusion
-    public List<_Net6CleanArchitectureQuizzApp.Application.Account.Models.TestDto>? AvailableTests { get; set; }
-    public string? ErrorMessage { get; set; }
-
-    public static CandidateAccessResult Success(
-        string authToken,
-        DateTime expiry,
-        string email,
-        string? nom,
-        string? prenom,
-        List<_Net6CleanArchitectureQuizzApp.Application.Account.Models.TestDto> availableTests)
-    {
-        return new CandidateAccessResult
+        return new AuthResultWithRole
         {
             IsSuccess = true,
-            AuthToken = authToken,
-            Expiry = expiry,
+            Token = null, // ❌ Pas de token pour les candidats
+            Expiry = null, // ❌ Pas d'expiry non plus
             Email = email,
             Nom = nom,
             Prenom = prenom,
-            AvailableTests = availableTests
+            UserRole = userRole
         };
     }
 
-    public static CandidateAccessResult Failure(string errorMessage)
+    public static AuthResultWithRole Failure(string error)
     {
-        return new CandidateAccessResult
+        return new AuthResultWithRole
         {
             IsSuccess = false,
-            ErrorMessage = errorMessage
+            ErrorMessage = error
         };
     }
 
-    public static implicit operator CandidateAccessResult(Common.Interfaces.CandidateAccessResult v)
+    public static AuthResultWithRole Failure(string[] errors)
     {
-        throw new NotImplementedException();
+        return new AuthResultWithRole
+        {
+            IsSuccess = false,
+            Errors = errors,
+            ErrorMessage = string.Join(", ", errors)
+        };
     }
 }

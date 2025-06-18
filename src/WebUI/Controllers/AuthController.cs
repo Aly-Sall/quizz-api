@@ -1,4 +1,4 @@
-﻿// src/WebUI/Controllers/AuthController.cs - Version simplifiée fonctionnelle
+﻿// src/WebUI/Controllers/AuthController.cs - CORRIGÉ POUR ENVOYER EMAIL AU CANDIDAT
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Application.Account.Models;
 using _Net6CleanArchitectureQuizzApp.Domain.Enums;
@@ -32,13 +32,15 @@ public class AuthController : ControllerBase
         {
             _logger.LogInformation("🔍 Login attempt with role {Role} for {Email}", request.UserRole, request.Email);
 
+            // Vérifier d'abord si l'utilisateur existe et si le mot de passe est correct
             var result = await _authService.LoginWithRoleAsync(request.Email, request.Password, request.UserRole);
 
             if (result.IsSuccess)
             {
                 if (request.UserRole == UserRole.Administrator)
                 {
-                    // Admin - retourner directement le token
+                    // ✅ Admin - retourner directement le token JWT
+                    _logger.LogInformation("✅ Admin login successful for {Email}", request.Email);
                     return Ok(new AuthResponseExtended
                     {
                         Token = result.Token,
@@ -52,29 +54,42 @@ public class AuthController : ControllerBase
                 }
                 else if (request.UserRole == UserRole.Candidate)
                 {
-                    // Candidat - envoyer email d'invitation
+                    // 📧 Candidat - NE PAS donner de token, mais envoyer un email d'invitation
+                    _logger.LogInformation("🔍 Candidate login - sending invitation email to {Email}", request.Email);
+
                     var emailSent = await _candidateInvitationService.SendCandidateInvitationEmailAsync(
                         result.Email!,
                         $"{result.Prenom} {result.Nom}");
 
-                    return Ok(new AuthResponseExtended
+                    if (emailSent)
                     {
-                        Message = emailSent ?
-                            "Un email d'invitation vous a été envoyé. Veuillez vérifier votre boîte mail." :
-                            "Erreur lors de l'envoi de l'email",
-                        Email = result.Email,
-                        RequiresEmailInvitation = true,
-                        UserRole = result.UserRole
-                    });
+                        _logger.LogInformation("✅ Invitation email sent successfully to {Email}", request.Email);
+                        return Ok(new AuthResponseExtended
+                        {
+                            Message = "Un email d'invitation vous a été envoyé. Veuillez vérifier votre boîte mail pour accéder à vos tests.",
+                            Email = result.Email,
+                            RequiresEmailInvitation = true,
+                            UserRole = result.UserRole,
+                            // ❌ PAS de Token ici - le candidat doit passer par l'email
+                            Token = null,
+                            Expiry = null
+                        });
+                    }
+                    else
+                    {
+                        _logger.LogError("❌ Failed to send invitation email to {Email}", request.Email);
+                        return StatusCode(500, new { error = "Erreur lors de l'envoi de l'email d'invitation" });
+                    }
                 }
             }
 
+            _logger.LogWarning("❌ Login failed for {Email}: {Error}", request.Email, result.ErrorMessage);
             return BadRequest(new { error = result.ErrorMessage });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la connexion");
-            return StatusCode(500, new { error = "Une erreur s'est produite" });
+            _logger.LogError(ex, "❌ Erreur lors de la connexion pour {Email}", request.Email);
+            return StatusCode(500, new { error = "Une erreur s'est produite lors de la connexion" });
         }
     }
 
@@ -92,6 +107,7 @@ public class AuthController : ControllerBase
             {
                 _logger.LogInformation("✅ Candidate access verified for {Email}", result.Email);
 
+                // ✅ Maintenant on peut donner le token JWT au candidat
                 return Ok(new AuthResponseExtended
                 {
                     Token = result.AuthToken,
@@ -110,7 +126,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la vérification d'accès candidat");
+            _logger.LogError(ex, "❌ Erreur lors de la vérification d'accès candidat");
             return StatusCode(500, new { error = "Une erreur s'est produite" });
         }
     }

@@ -1,7 +1,6 @@
 ﻿// src/Application/Account/Models/LoginWithRoleModels.cs - Version complète
 using _Net6CleanArchitectureQuizzApp.Domain.Enums;
 
-namespace _Net6CleanArchitectureQuizzApp.Application.Account.Models;
 
 public class LoginWithRoleRequest
 {
@@ -27,6 +26,7 @@ public class AuthResponseExtended
     public string? Message { get; set; }
     public bool RequiresEmailInvitation { get; set; }
     public List<TestDto>? AvailableTests { get; set; }
+    public bool IsSuccess { get; internal set; }
 }
 
 public class TestDto

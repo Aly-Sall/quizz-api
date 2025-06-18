@@ -1,22 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// src/Application/Account/Commands/Login/LoginModel.cs - VERSION AVEC RÔLE
+using _Net6CleanArchitectureQuizzApp.Domain.Enums;
+using _Net6CleanArchitectureQuizzApp.Application.Account.Models;
 using MediatR;
+using System.ComponentModel.DataAnnotations;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Login;
-public record LoginModel(
-    string Email,
-    string Password) : IRequest<AuthResponse>; // Changed to return AuthResponse directly
 
-public record AuthResponse(
-    string Token,
-    //string RefreshToken,
-    DateTime Expiry,
-    string? Nom,
-    string? Prenom,
-    string? UserName,
-    string? Email
-    //string? Role,
-    );
+public class LoginModel : IRequest<AuthResponseExtended>
+{
+    [Required(ErrorMessage = "L'email est requis")]
+    [EmailAddress(ErrorMessage = "Format d'email invalide")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Le mot de passe est requis")]
+    public string Password { get; set; } = string.Empty;
+
+    // ✅ NOUVEAU : Rôle utilisateur (optionnel, par défaut Candidate)
+    public UserRole UserRole { get; set; } = UserRole.Candidate;
+}

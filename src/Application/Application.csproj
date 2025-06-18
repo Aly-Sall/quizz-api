@@ -25,9 +25,9 @@
       <None Remove="TestInvitation\Commands\" />
       <None Remove="TestInvitation\Commands\SendTestInvitation\" />
       <None Remove="Account\models\" />
-      <None Remove="Account\Commads\" />
       <None Remove="Account\Commads\LoginWithRole\" />
       <None Remove="Account\Commads\VerifyCandidateAccess\" />
+      <None Remove="Account\Commands\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -58,9 +58,9 @@
       <Folder Include="TestInvitation\Commands\" />
       <Folder Include="TestInvitation\Commands\SendTestInvitation\" />
       <Folder Include="Account\models\" />
-      <Folder Include="Account\Commads\" />
       <Folder Include="Account\Commads\LoginWithRole\" />
       <Folder Include="Account\Commads\VerifyCandidateAccess\" />
+      <Folder Include="Account\Commands\" />
     </ItemGroup>
 
 </Project>

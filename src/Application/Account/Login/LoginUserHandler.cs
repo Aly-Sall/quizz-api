@@ -1,70 +1,99 @@
-﻿// src/Application/Account/Commands/Login/LoginHandler.cs
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿// src/Application/Account/Commands/Login/LoginHandler.cs - VERSION AVEC GESTION DES RÔLES
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
+using _Net6CleanArchitectureQuizzApp.Application.Account.Models;
+using _Net6CleanArchitectureQuizzApp.Domain.Enums;
 using MediatR;
-using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
 using Microsoft.Extensions.Logging;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Account.Commands.Login;
 
-public class LoginHandler : IRequestHandler<LoginModel, AuthResponse>
+public class LoginHandler : IRequestHandler<LoginModel, AuthResponseExtended>
 {
     private readonly IAuthService _authService;
+    private readonly ICandidateInvitationService _candidateInvitationService;
     private readonly ILogger<LoginHandler> _logger;
 
     public LoginHandler(
         IAuthService authService,
+        ICandidateInvitationService candidateInvitationService,
         ILogger<LoginHandler> logger)
     {
         _authService = authService;
+        _candidateInvitationService = candidateInvitationService;
         _logger = logger;
     }
 
-    public async Task<AuthResponse> Handle(LoginModel request, CancellationToken cancellationToken)
+    public async Task<AuthResponseExtended> Handle(LoginModel request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("🔍 LOGIN ATTEMPT - Email: {Email}", request.Email);
-
         try
         {
-            // ✅ Validation de base
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                _logger.LogWarning("❌ Email or password is empty");
-                throw new UnauthorizedAccessException("Email et mot de passe requis");
-            }
+            _logger.LogInformation("🔍 Login attempt with role {Role} for {Email}", request.UserRole, request.Email);
 
-            // ✅ Déléguer l'authentification au service d'infrastructure
-            var result = await _authService.LoginAsync(request.Email.Trim(), request.Password);
+            var result = await _authService.LoginWithRoleAsync(request.Email, request.Password, request.UserRole);
 
             if (result.IsSuccess)
             {
-                _logger.LogInformation("✅ Login successful for user: {Email}", request.Email);
+                if (request.UserRole == UserRole.Administrator)
+                {
+                    _logger.LogInformation("✅ Admin login successful for {Email}", request.Email);
 
-                return new AuthResponse(
-                    Token: result.Token!,
-                    Expiry: result.Expiry!.Value,
-                    Nom: result.Nom,
-                    Prenom: result.Prenom,
-                    UserName: result.UserName,
-                    Email: result.Email
-                );
+                    // Admin - retourner directement le token
+                    return new AuthResponseExtended
+                    {
+                        Token = result.Token,
+                        Expiry = result.Expiry,
+                        UserRole = result.UserRole,
+                        Email = result.Email,
+                        Nom = result.Nom,
+                        Prenom = result.Prenom,
+                        RequiresEmailInvitation = false
+                    };
+                }
+                else if (request.UserRole == UserRole.Candidate)
+                {
+                    _logger.LogInformation("✅ Candidate login successful for {Email} - sending invitation email", request.Email);
+
+                    // Candidat - envoyer email d'invitation
+                    var emailSent = await _candidateInvitationService.SendCandidateInvitationEmailAsync(
+                        result.Email!,
+                        $"{result.Prenom} {result.Nom}");
+
+                    return new AuthResponseExtended
+                    {
+                        Message = emailSent ?
+                            "Un email d'invitation vous a été envoyé. Veuillez vérifier votre boîte mail." :
+                            "Erreur lors de l'envoi de l'email",
+                        Email = result.Email,
+                        Nom = result.Nom,
+                        Prenom = result.Prenom,
+                        RequiresEmailInvitation = true,
+                        UserRole = result.UserRole,
+                        // ✅ PAS DE TOKEN POUR LES CANDIDATS
+                        Token = null,
+                        Expiry = null
+                    };
+                }
             }
-            else
+
+            _logger.LogWarning("❌ Login failed for {Email}: {Error}", request.Email, result.ErrorMessage);
+
+            return new AuthResponseExtended
             {
-                _logger.LogWarning("❌ Login failed for user: {Email} - {Error}", request.Email, result.ErrorMessage);
-                throw new UnauthorizedAccessException(result.ErrorMessage ?? "Email ou mot de passe incorrect");
-            }
-        }
-        catch (UnauthorizedAccessException)
-        {
-            throw;
+                IsSuccess = false,
+                Message = result.ErrorMessage ?? "Email ou mot de passe incorrect",
+                UserRole = request.UserRole
+            };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Unexpected error during login for: {Email}", request.Email);
-            throw new UnauthorizedAccessException("Une erreur s'est produite lors de la connexion");
+            _logger.LogError(ex, "❌ Error during login for {Email}", request.Email);
+
+            return new AuthResponseExtended
+            {
+                IsSuccess = false,
+                Message = "Une erreur s'est produite lors de la connexion",
+                UserRole = request.UserRole
+            };
         }
     }
 }

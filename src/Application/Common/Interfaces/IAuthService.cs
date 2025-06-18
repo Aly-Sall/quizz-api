@@ -1,140 +1,129 @@
-﻿// src/Application/Common/Interfaces/IAuthService.cs - REMPLACER LE CONTENU EXISTANT
-using _Net6CleanArchitectureQuizzApp.Application.Common.Models;
+﻿// src/Application/Common/Interfaces/IAuthService.cs - VERSION FINALE CORRIGÉE
 using _Net6CleanArchitectureQuizzApp.Domain.Enums;
-// Importer explicitement TestDto depuis Account.Models
-using TestDtoModel = _Net6CleanArchitectureQuizzApp.Application.Account.Models.TestDto;
+using _Net6CleanArchitectureQuizzApp.Application.Account.Models;
 
 namespace _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 
 public interface IAuthService
 {
-    // Méthodes existantes
     Task<AuthResult> LoginAsync(string email, string password);
     Task<AuthResult> RegisterAsync(string email, string password, string? nom = null, string? prenom = null);
     Task<bool> UserExistsAsync(string email);
 
-    // NOUVELLES MÉTHODES POUR LA GESTION DES RÔLES
-    Task<AuthResultWithRole> LoginWithRoleAsync(string email, string password, UserRole expectedRole);
-    Task<CandidateAccessResult> VerifyCandidateAccessAsync(string accessToken);
-}
+    // ✅ MÉTHODE AVEC RÔLE
+    Task<IAuthService.AuthResultWithRole> LoginWithRoleAsync(string email, string password, UserRole expectedRole);
 
-// Classe AuthResult existante (ne pas modifier)
-public class AuthResult
-{
-    public bool IsSuccess { get; set; }
-    public string? Token { get; set; }
-    public DateTime? Expiry { get; set; }
-    public string? Email { get; set; }
-    public string? UserName { get; set; }
-    public string? Nom { get; set; }
-    public string? Prenom { get; set; }
-    public int? UserId { get; set; }
-    public string? ErrorMessage { get; set; }
-    public string[]? Errors { get; set; }
+    // ✅ MÉTHODE POUR CANDIDATS
+    Task<IAuthService.CandidateAccessResult> VerifyCandidateAccessAsync(string accessToken);
 
-    public static AuthResult Success(string token, DateTime expiry, string email, string? userName = null,
-        string? nom = null, string? prenom = null, int? userId = null)
+    // ✅ CLASSES INTERNES POUR LES RÉSULTATS
+    public class AuthResult
     {
-        return new AuthResult
+        public bool IsSuccess { get; private set; }
+        public string? Token { get; private set; }
+        public DateTime? Expiry { get; private set; }
+        public string? Email { get; private set; }
+        public string? UserName { get; private set; }
+        public string? Nom { get; private set; }
+        public string? Prenom { get; private set; }
+        public int UserId { get; private set; }
+        public string? ErrorMessage { get; private set; }
+        public string[]? Errors { get; private set; }
+
+        private AuthResult(bool isSuccess, string? token = null, DateTime? expiry = null,
+            string? email = null, string? userName = null, string? nom = null,
+            string? prenom = null, int userId = 0, string? errorMessage = null, string[]? errors = null)
         {
-            IsSuccess = true,
-            Token = token,
-            Expiry = expiry,
-            Email = email,
-            UserName = userName,
-            Nom = nom,
-            Prenom = prenom,
-            UserId = userId
-        };
+            IsSuccess = isSuccess;
+            Token = token;
+            Expiry = expiry;
+            Email = email;
+            UserName = userName;
+            Nom = nom;
+            Prenom = prenom;
+            UserId = userId;
+            ErrorMessage = errorMessage;
+            Errors = errors;
+        }
+
+        public static AuthResult Success(string token, DateTime expiry, string email,
+            string? userName, string nom, string prenom, int userId)
+            => new(true, token, expiry, email, userName, nom, prenom, userId);
+
+        public static AuthResult Failure(string errorMessage)
+            => new(false, errorMessage: errorMessage);
+
+        public static AuthResult Failure(string[] errors)
+            => new(false, errors: errors);
     }
 
-    public static AuthResult Failure(string error)
+    public class AuthResultWithRole
     {
-        return new AuthResult
+        public bool IsSuccess { get; private set; }
+        public string? Token { get; private set; }
+        public DateTime? Expiry { get; private set; }
+        public string? Email { get; private set; }
+        public string? Nom { get; private set; }
+        public string? Prenom { get; private set; }
+        public UserRole UserRole { get; private set; }
+        public string? ErrorMessage { get; private set; }
+
+        private AuthResultWithRole(bool isSuccess, string? token = null, DateTime? expiry = null,
+            string? email = null, string? nom = null, string? prenom = null,
+            UserRole userRole = UserRole.Candidate, string? errorMessage = null)
         {
-            IsSuccess = false,
-            ErrorMessage = error
-        };
+            IsSuccess = isSuccess;
+            Token = token;
+            Expiry = expiry;
+            Email = email;
+            Nom = nom;
+            Prenom = prenom;
+            UserRole = userRole;
+            ErrorMessage = errorMessage;
+        }
+
+        public static AuthResultWithRole Success(string token, DateTime expiry,
+            string email, string nom, string prenom, UserRole userRole)
+            => new(true, token, expiry, email, nom, prenom, userRole);
+
+        public static AuthResultWithRole SuccessWithoutToken(string email,
+            string nom, string prenom, UserRole userRole)
+            => new(true, email: email, nom: nom, prenom: prenom, userRole: userRole);
+
+        public static AuthResultWithRole Failure(string errorMessage)
+            => new(false, errorMessage: errorMessage);
     }
 
-    public static AuthResult Failure(string[] errors)
+    public class CandidateAccessResult
     {
-        return new AuthResult
+        public bool IsSuccess { get; private set; }
+        public string? ErrorMessage { get; private set; }
+        public string? Email { get; private set; }
+        public string? Nom { get; private set; }
+        public string? Prenom { get; private set; }
+        public string? AuthToken { get; private set; }
+        public DateTime? Expiry { get; private set; }
+        public List<TestDto>? AvailableTests { get; private set; }
+
+        private CandidateAccessResult(bool isSuccess, string? errorMessage = null,
+            string? email = null, string? nom = null, string? prenom = null,
+            string? authToken = null, DateTime? expiry = null, List<TestDto>? availableTests = null)
         {
-            IsSuccess = false,
-            Errors = errors
-        };
-    }
-}
+            IsSuccess = isSuccess;
+            ErrorMessage = errorMessage;
+            Email = email;
+            Nom = nom;
+            Prenom = prenom;
+            AuthToken = authToken;
+            Expiry = expiry;
+            AvailableTests = availableTests;
+        }
 
-// NOUVELLES CLASSES POUR LA GESTION DES RÔLES
-public class AuthResultWithRole
-{
-    public bool IsSuccess { get; set; }
-    public string? Token { get; set; }
-    public DateTime? Expiry { get; set; }
-    public string? Email { get; set; }
-    public string? Nom { get; set; }
-    public string? Prenom { get; set; }
-    public UserRole? UserRole { get; set; }
-    public string? ErrorMessage { get; set; }
+        public static CandidateAccessResult Success(string email, string nom, string prenom,
+            string authToken, DateTime expiry, List<TestDto>? availableTests = null)
+            => new(true, null, email, nom, prenom, authToken, expiry, availableTests);
 
-    public static AuthResultWithRole Success(string? token, DateTime? expiry, string email, string nom, string prenom, UserRole userRole)
-    {
-        return new AuthResultWithRole
-        {
-            IsSuccess = true,
-            Token = token,
-            Expiry = expiry,
-            Email = email,
-            Nom = nom,
-            Prenom = prenom,
-            UserRole = userRole
-        };
-    }
-
-    public static AuthResultWithRole Failure(string errorMessage)
-    {
-        return new AuthResultWithRole
-        {
-            IsSuccess = false,
-            ErrorMessage = errorMessage
-        };
-    }
-}
-
-public class CandidateAccessResult
-{
-    public bool IsSuccess { get; set; }
-    public string? AuthToken { get; set; }
-    public DateTime? Expiry { get; set; }
-    public string? Email { get; set; }
-    public string? Nom { get; set; }
-    public string? Prenom { get; set; }
-    // Utiliser l'alias pour éviter la confusion avec d'autres TestDto
-    public List<TestDtoModel>? AvailableTests { get; set; }
-    public string? ErrorMessage { get; set; }
-
-    public static CandidateAccessResult Success(string authToken, DateTime expiry, string email, string nom, string prenom, List<TestDtoModel> availableTests)
-    {
-        return new CandidateAccessResult
-        {
-            IsSuccess = true,
-            AuthToken = authToken,
-            Expiry = expiry,
-            Email = email,
-            Nom = nom,
-            Prenom = prenom,
-            AvailableTests = availableTests
-        };
-    }
-
-    public static CandidateAccessResult Failure(string errorMessage)
-    {
-        return new CandidateAccessResult
-        {
-            IsSuccess = false,
-            ErrorMessage = errorMessage
-        };
+        public static CandidateAccessResult Failure(string errorMessage)
+            => new(false, errorMessage: errorMessage);
     }
 }
