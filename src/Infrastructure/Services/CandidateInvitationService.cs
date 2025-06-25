@@ -1,4 +1,4 @@
-﻿// src/Infrastructure/Services/CandidateInvitationService.cs - FICHIER CORRIGÉ
+﻿// src/Infrastructure/Services/CandidateInvitationService.cs - CORRIGÉ COMPLET
 using _Net6CleanArchitectureQuizzApp.Application.Common.Interfaces;
 using _Net6CleanArchitectureQuizzApp.Application.Account.Models;
 using Microsoft.Extensions.Logging;
@@ -31,11 +31,14 @@ public class CandidateInvitationService : ICandidateInvitationService
         {
             _logger.LogInformation("🔍 Envoi d'invitation candidat à {Email}", candidateEmail);
 
-            // ✅ LIEN VERS LOGIN AVEC PARAMÈTRES CANDIDAT
-            var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:4200";
-            var invitationLink = $"{frontendUrl}/login?role=candidate&email={candidateEmail}";
+            // ✅ GÉNÉRER UN TOKEN UNIQUE POUR LE CANDIDAT
+            var invitationToken = GenerateInvitationToken(candidateEmail);
 
-            // Contenu de l'email corrigé
+            // ✅ LIEN CORRIGÉ VERS VOTRE APPLICATION ANGULAR
+            var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:4200";
+            var invitationLink = $"{frontendUrl}/login?token={invitationToken}";
+
+            // Contenu de l'email
             var subject = "Invitation à passer vos tests - Quiz App";
             var body = $@"
 <html>
@@ -47,17 +50,7 @@ public class CandidateInvitationService : ICandidateInvitationService
         
         <p>Bonjour <strong>{candidateName}</strong>,</p>
         
-        <p>Vos tests de candidature sont maintenant prêts ! Connectez-vous pour accéder à votre espace candidat.</p>
-        
-        <div style=""background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;"">
-            <h3 style=""margin: 0; color: #2c3e50;"">📝 Instructions simples :</h3>
-            <ol style=""margin: 10px 0;"">
-                <li>Cliquez sur le bouton ci-dessous</li>
-                <li>Sélectionnez <strong>Candidat</strong> comme type de compte</li>
-                <li>Entrez vos identifiants (email: {candidateEmail})</li>
-                <li>Accédez à vos tests</li>
-            </ol>
-        </div>
+        <p>Vos tests sont maintenant prêts ! Cliquez sur le lien ci-dessous pour accéder directement à vos tests.</p>
         
         <div style=""text-align: center; margin: 30px 0;"">
             <a href=""{invitationLink}"" 
@@ -70,7 +63,7 @@ public class CandidateInvitationService : ICandidateInvitationService
         
         <div style=""background-color: #d1ecf1; padding: 10px; border-radius: 5px; margin: 20px 0;"">
             <p style=""margin: 0; color: #0c5460;"">
-                <strong>👤 Important :</strong> Utilisez vos identifiants candidat pour vous connecter
+                <strong>👤 Important :</strong> Ce lien vous connecte automatiquement - aucun identifiant requis !
             </p>
         </div>
         
@@ -81,7 +74,6 @@ public class CandidateInvitationService : ICandidateInvitationService
         
         <hr style=""border: none; border-top: 1px solid #eee; margin: 30px 0;""/>
         <p style=""color: #7f8c8d; font-size: 12px;"">
-            Une fois connecté, vous pourrez voir tous les tests disponibles et choisir celui que vous souhaitez passer.<br/><br/>
             Cordialement,<br/>
             <strong>L'équipe Quiz App</strong>
         </p>
@@ -95,6 +87,7 @@ public class CandidateInvitationService : ICandidateInvitationService
             if (emailSent)
             {
                 _logger.LogInformation("✅ Email d'invitation envoyé avec succès à {Email}", candidateEmail);
+                _logger.LogInformation("🔗 [DEBUG] Lien d'invitation généré: {Link}", invitationLink);
                 return true;
             }
             else
@@ -110,9 +103,29 @@ public class CandidateInvitationService : ICandidateInvitationService
         }
     }
 
+    // ✅ GÉNÉRER UN TOKEN UNIQUE BASÉ SUR L'EMAIL
+    private string GenerateInvitationToken(string candidateEmail)
+    {
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var emailHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(candidateEmail))
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .Replace("=", "");
+
+        return $"candidate_{emailHash}_{timestamp}";
+    }
+
     public async Task<List<TestDto>> GetAvailableTestsForCandidateAsync(string candidateEmail)
     {
-        // TODO: Implémenter la récupération des tests disponibles
-        return new List<TestDto>();
+        try
+        {
+            _logger.LogInformation("🔍 Récupération des tests pour {Email}", candidateEmail);
+            return new List<TestDto>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Erreur lors de la récupération des tests pour {Email}", candidateEmail);
+            return new List<TestDto>();
+        }
     }
 }

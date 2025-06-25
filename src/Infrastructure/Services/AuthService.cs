@@ -236,8 +236,8 @@ public class AuthService : IAuthService
 
             return IAuthService.CandidateAccessResult.Success(
                 candidateEmail,    // email
-                "Doe",            // nom  
-                "John",           // prenom
+                "Sall",            // nom  
+                "Aly",           // prenom
                 tokenResult.Token, // authToken
                 tokenResult.Expiry, // expiry
                 availableTests     // availableTests
